@@ -48,6 +48,11 @@ def update_mod_template_references():
     if ACTUAL_REPO_OWNER is None or ACTUAL_REPO_NAME is None:
         raise Exception("ACTUAL_REPO_OWNER and ACTUAL_REPO_NAME must be set")
 
+    # Safety to avoid running this script from the wrong directory
+    matching_files = glob.glob("repo-template-setup.py")
+    if len(matching_files) == 0:
+        raise FileNotFoundError("Must be run from repo directory. Script not found.")
+
     def replace_go_imports(content):
         pattern = f"github.com/{TEMPLATE_REPO_OWNER}/{TEMPLATE_REPO_NAME}"
         replacement = f"github.com/{ACTUAL_REPO_OWNER}/{ACTUAL_REPO_NAME}"
