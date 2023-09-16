@@ -6,9 +6,14 @@ import re
 GO_VERSION = "1.21"
 TEMPLATE_REPO_OWNER = "NotCoffee418"
 TEMPLATE_REPO_NAME = "GoHtmxPgsql-Boilerplate"
+ACTUAL_REPO_OWNER = None
+ACTUAL_REPO_NAME = None
 
 
 # -- FUNCTIONS
+def prompt_dev(question, default_value):
+    return input(f"{question} [{default_value}]: ") or default_value
+
 def edit_file(file_path, edit_func):
     with open(file_path, 'r') as f:
         content = f.read()
@@ -40,12 +45,12 @@ def remove_gitignore_template(content):
 
 
 def update_mod_template_references():
-    actual_repo_owner = os.environ['GITHUB_REPOSITORY'].split('/')[0]
-    actual_repo_name = os.environ['GITHUB_REPOSITORY'].split('/')[1]
+    if ACTUAL_REPO_OWNER is None or ACTUAL_REPO_NAME is None:
+        raise Exception("ACTUAL_REPO_OWNER and ACTUAL_REPO_NAME must be set")
 
     def replace_go_imports(content):
         pattern = f"github.com/{TEMPLATE_REPO_OWNER}/{TEMPLATE_REPO_NAME}"
-        replacement = f"github.com/{actual_repo_owner}/{actual_repo_name}"
+        replacement = f"github.com/{ACTUAL_REPO_OWNER}/{ACTUAL_REPO_NAME}"
         return re.sub(pattern, replacement, content)
 
     go_files = glob.glob(f"{os.getcwd()}/**/*.go", recursive=True)
@@ -66,11 +71,16 @@ def update_go_version_in_go_mod(content):
 
 def cleanup_repo_setup():
     os.remove(__file__)
-    os.remove(".github/workflows/repo-template-setup.yml")
 
 
 # --- Run script
+GO_VERSION = prompt_dev("Go version", GO_VERSION)
+ACTUAL_REPO_OWNER = prompt_dev("Github Repository Owner", ACTUAL_REPO_OWNER)
+ACTUAL_REPO_NAME = prompt_dev("Github Repository Name", ACTUAL_REPO_NAME)
+
+print("Updating files...")
 edit_file('.gitignore', remove_gitignore_template)
 edit_file('go.mod', update_go_version_in_go_mod)
 update_mod_template_references()
 cleanup_repo_setup()
+print("Commit your changes and you're good to go!")
