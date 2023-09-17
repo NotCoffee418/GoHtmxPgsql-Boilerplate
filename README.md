@@ -1,4 +1,9 @@
 # Go + HTMX + PostgreSQL Webserver Template
+## Features
+- Go webserver with Gorilla Mux
+- HTMX
+- PostgreSQL with GORM
+- 
 ## Template Setup
 
 Welcome to your new Go webserver repo! To finalize the setup, follow these quick steps:

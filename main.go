@@ -1,39 +1,32 @@
 package main
 
 import (
-	"html/template"
+	"fmt"
+	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/config"
+	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"time"
 )
 
-type Page struct {
-	Title       string
-	Description string
-	Body        string
-}
-
 func main() {
-	//http.ListenAndServe(":8080", http.FileServer(http.Dir("public"))
-	//h1 := func(w http.ResponseWriter, r *http.Request) {
-	//	templ := template.Must((template.ParseFiles("index.html")))
-	//
-	//	data := map[string]Page{
-	//		"Post": {
-	//			Title:       "My first post",
-	//			Description: "My first post description",
-	//			Body:        "My first post body",
-	//		},
-	//	}
-	//
-	//	templ.Execute(w, data)
+	router := mux.NewRouter()
+
+	// Register all routes here, described in handlers
+	internal.RegisterRoutes(router)
+
+	// Serve static files
+	router.PathPrefix("/").
+		Handler(http.StripPrefix("/", http.FileServer(http.Dir("static/"))))
+
+	// Start server
+	svr := &http.Server{
+		Handler:      router,
+		Addr:         fmt.Sprintf("127.0.0.1:%d", config.ListenPort),
+		WriteTimeout: config.TimeoutSeconds * time.Second,
+		ReadTimeout:  config.TimeoutSeconds * time.Second,
 	}
-
-	// Handlers
-	//http.HandleFunc("/", h1)
-	//
-	//// Start server
-	//log.Fatal(http.ListenAndServe(":8080", nil))
-
-	mux := http.NewServeMux()
-
+	log.Print("Server started on port ", config.ListenPort)
+	log.Fatal(svr.ListenAndServe())
 }
