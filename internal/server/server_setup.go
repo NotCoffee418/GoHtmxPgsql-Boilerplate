@@ -6,14 +6,13 @@ import (
 	"path/filepath"
 
 	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/config"
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/common"
 	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
 func SetupServer(engine *gin.Engine) {
 	// Set up templates at common.Tmpl
-	initializeTemplates()
+	initializeTemplates(engine)
 
 	// Set up static file serving
 	engine.Static("/static", "./static")
@@ -28,7 +27,7 @@ func SetupServer(engine *gin.Engine) {
 
 }
 
-func initializeTemplates() {
+func initializeTemplates(engine *gin.Engine) {
 	// Load HTML templates
 	all_templates, err := utils.GetRecursiveFiles(
 		"./templates",
@@ -40,5 +39,5 @@ func initializeTemplates() {
 	if err != nil {
 		log.Fatal("Error parsing templates: ", err)
 	}
-	common.Tmpl = tmpl
+	engine.SetHTMLTemplate(tmpl)
 }

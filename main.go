@@ -17,9 +17,6 @@ func main() {
 	// Register all routes here, described in handlers
 	server.SetupServer(engine)
 
-	// Serve static files
-	// TODO ...
-
 	// Start server
 	svr := &http.Server{
 		Handler:      engine,

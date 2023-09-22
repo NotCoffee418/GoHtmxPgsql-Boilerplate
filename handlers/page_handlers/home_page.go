@@ -1,19 +1,61 @@
 package page_handlers
 
 import (
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/common"
+	"net/http"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
 type HomeHandler struct{}
 
+type CounterData struct {
+	Value int
+	Color string
+}
+
+var CounterColors = [10]string{"#fff", "#800", "#f00", "#080", "#0f0", "#008", "#00f", "#ff0", "#0ff", "#f0f"}
+
 // Implements PageRouteRegistrar interface
 func (h *HomeHandler) Handler(engine *gin.Engine) {
 	engine.GET("/", h.get)
+	engine.POST("/component/home/counter", h.updateCounter)
 }
 
 func (h *HomeHandler) get(c *gin.Context) {
-	if err := common.Tmpl.ExecuteTemplate(c.Writer, "home_page.html", nil); err != nil {
-		c.Error(err).SetType(gin.ErrorTypePrivate) // This sets the error type. You can handle it in a centralized middleware.
+	// Set additional page data
+	data := gin.H{
+		// Initial counter values
+		"Counter": CounterData{
+			Value: 0,
+			Color: "#fff",
+		},
 	}
+
+	// Render page
+	c.HTML(http.StatusOK, "home_page.html", data)
+}
+
+func (h *HomeHandler) updateCounter(c *gin.Context) {
+	currentCountStr := c.PostForm("currentCount")
+	currentCount, err := strconv.Atoi(currentCountStr)
+	if err != nil {
+		c.String(http.StatusBadRequest, "Invalid currentCount value")
+		return
+	}
+
+	// Update counter value
+	currentCount++
+
+	// Prepare updated counter data
+	data := map[string]interface{}{
+		// Initial counter values
+		"Counter": CounterData{
+			Value: currentCount,
+			Color: CounterColors[currentCount%len(CounterColors)],
+		},
+	}
+
+	// Render page
+	c.HTML(http.StatusOK, "counter.html", data)
 }
