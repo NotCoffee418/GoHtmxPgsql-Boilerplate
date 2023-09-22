@@ -1,6 +1,6 @@
 # Go + HTMX + PostgreSQL Webserver Template
 ## Features
-- Go webserver with Gorilla Mux
+- Go webserver with Gin
 - HTMX
 - PostgreSQL with GORM
 - 

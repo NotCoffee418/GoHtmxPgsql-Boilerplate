@@ -1,11 +1,11 @@
 package config
 
 import (
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/handlers"
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/server_models"
+	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/handlers/page_handlers"
+	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/common"
 )
 
-// RouteHandlers Register all routes here, described in handlers
-var RouteHandlers = &[]server_models.RouteRegistrar{
-	&handlers.HomeHandler{},
+// HandlerRegistrar Register all routes here, described in handlers
+var RouteHandlers = []common.HandlerRegistrar{
+	&page_handlers.HomeHandler{},
 }
