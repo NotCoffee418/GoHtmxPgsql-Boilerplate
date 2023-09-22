@@ -13,7 +13,7 @@ func (h *HomeHandler) Handler(engine *gin.Engine) {
 }
 
 func (h *HomeHandler) get(c *gin.Context) {
-	if err := common.Tmpl.ExecuteTemplate(c.Writer, "home.html", nil); err != nil {
+	if err := common.Tmpl.ExecuteTemplate(c.Writer, "home_page.html", nil); err != nil {
 		c.Error(err).SetType(gin.ErrorTypePrivate) // This sets the error type. You can handle it in a centralized middleware.
 	}
 }
