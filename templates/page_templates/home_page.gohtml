@@ -1,0 +1,5 @@
+{{ template "default_base.gohtml" . }}
+{{ define "content" }}
+<h1>Welcome to my website</h1>
+<div id="counter-display">{{ template "counter.gohtml" . }}</div>
+{{ end }}

@@ -33,7 +33,7 @@ func (h *HomeHandler) get(c *gin.Context) {
 	}
 
 	// Render page
-	c.HTML(http.StatusOK, "home_page.html", data)
+	c.HTML(http.StatusOK, "home_page.gohtml", data)
 }
 
 func (h *HomeHandler) updateCounter(c *gin.Context) {
@@ -57,5 +57,5 @@ func (h *HomeHandler) updateCounter(c *gin.Context) {
 	}
 
 	// Render page
-	c.HTML(http.StatusOK, "counter.html", data)
+	c.HTML(http.StatusOK, "counter.gohtml", data)
 }
