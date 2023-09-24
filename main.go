@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/config"
+	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/page"
 	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/server"
 	"github.com/gin-gonic/gin"
-	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 )
 
@@ -30,10 +30,13 @@ func main() {
 	}
 
 	// Background init datbase connection
-	var conn *sqlx.DB
-	go func() {
-		conn = server.GetConn()
-	}()
+	// var conn *sqlx.DB
+	// go func() {
+	// 	conn = server.GetConn()
+	// }()
+
+	// Set default page title when missing
+	page.DefaultPageTitle = config.WebsiteTitle
 
 	// Register all routes here, described in handlers
 	engine := gin.Default()
@@ -50,8 +53,8 @@ func main() {
 	log.Fatal(svr.ListenAndServe())
 
 	// Close DB connection
-	if conn != nil {
-		log.Println("Closing DB connection...")
-		defer conn.Close()
-	}
+	// if conn != nil {
+	// 	log.Println("Closing DB connection...")
+	// 	defer conn.Close()
+	// }
 }

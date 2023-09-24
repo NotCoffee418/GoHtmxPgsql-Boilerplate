@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/page"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,17 +24,24 @@ func (h *HomePageHandler) Handler(engine *gin.Engine) {
 }
 
 func (h *HomePageHandler) get(c *gin.Context) {
-	// Set additional page data
-	data := gin.H{
-		// Initial counter values
+	// Set SEO meta data
+	meta := &page.PageMetaData{
+		Title:       "Demo Home Page",
+		Description: "This is a demo home page showing off the boilerplate.",
+	}
+
+	// Initial counter values
+	data := &map[string]interface{}{
 		"Counter": CounterData{
 			Value: 0,
 			Color: "#fff",
 		},
 	}
 
+	structuredData := page.StructurePageData(&data, meta)
+
 	// Render page
-	c.HTML(http.StatusOK, "home_page.gohtml", data)
+	c.HTML(http.StatusOK, "home_page.gohtml", structuredData)
 }
 
 func (h *HomePageHandler) updateCounter(c *gin.Context) {
@@ -56,6 +64,8 @@ func (h *HomePageHandler) updateCounter(c *gin.Context) {
 		},
 	}
 
+	structuredData := page.StructurePageData(&data, nil)
+
 	// Render page
-	c.HTML(http.StatusOK, "counter.gohtml", data)
+	c.HTML(http.StatusOK, "counter.gohtml", structuredData)
 }

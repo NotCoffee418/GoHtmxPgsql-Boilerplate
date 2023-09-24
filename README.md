@@ -71,22 +71,36 @@ Your page content should go here
 
 ##### Create a handler for the page in `./handlers` with this structure:
 ```go
-type SomePageHandler struct{}
+type HomePageHandler struct{}
 
 // Implements PageRouteRegistrar interface
-func (h *SomePageHandler) Handler(engine *gin.Engine) {
-    engine.GET("/some-page", h.get)
+func (h *HomePageHandler) Handler(engine *gin.Engine) {
+    engine.GET("/", h.get)
 }
 
-func (h *SomePageHandler) get(c *gin.Context) {
-    val := "Some data"
-    data := gin.H{
-        "PageData": val
+func (h *HomePageHandler) get(c *gin.Context) {
+    // Set SEO meta data
+    meta := &page.PageMetaData{
+        Title:       "Demo Home Page",
+        Description: "This is a demo home page showing off the boilerplate.",
     }
 
-    c.HTML(http.StatusOK, "home_page.gohtml", data)
+    // Any additional data required by the page
+    data := &map[string]interface{}{
+        "Counter": CounterData{
+            Value: 0,
+            Color: "#fff",
+        },
+    }
+
+    // Turn it into structured data
+    structuredData := page.StructurePageData(&data, meta)
+
+    // Render page
+    c.HTML(http.StatusOK, "home_page.gohtml", structuredData)
 }
 ```
+
 You can register multiple related handlers in one file. For more details see the  [Gin documentation](https://gin-gonic.com/docs/)
 
 ##### Register the handler in `./config/handlers.go`:
@@ -98,6 +112,8 @@ Add the handler to the `RouteHandlers` slice:
 ### Creating an HTMX component
 The instructions are the same as for creating a page, but you want to add the route in the relevant page or system's handler file.  
 Additionally, htmx component templates should not include ```{{ template "default_base.gohtml" . }}```.
+
+You can still use `page.StructurePageData(data, nil)` without defining meta for between page and component, if the page loads the component as well.
 
 ### API Handlers
 API handlers are defined in `./handlers/api_handlers`.  
@@ -153,3 +169,4 @@ The default definitions are:
 - `content`: Each page expects a `content` block to be defined. HTMX components do not use this block.
 - `scripts`: Optional, at the bottom of the page. Can be used to add additional scripts to the page. `<script>` tags are required.
 - `head`: Optional, will be loaded in `<head>` of the page.
+- `page_title`: Will be used as the page title. Defaults to website name.
