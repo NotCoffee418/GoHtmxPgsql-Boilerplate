@@ -1,13 +1,14 @@
-# Go + HTMX + PostgreSQL Webserver Template
+# Go Webserver Template
 ## Features
 - Go webserver with Gin
-- HTMX
-- PostgreSQL with GORM
+- HTMX with Go templates
+- API handlers
+- PostgreSQL with sqlx
 - Tailwind CSS
 
 ## Template Setup
 
-Welcome to your new Go webserver repo! To finalize the setup, follow these quick steps:
+To finalize the setup, follow these quick steps:
 
 1. **Clone your repo:**
 
@@ -43,7 +44,7 @@ That's it! Your repo is now ready to use.
 - [Go](https://golang.org/)
 - [PostgreSQL](https://www.postgresql.org/) or [Docker](https://www.docker.com/) (for database)
 - [Node.js](https://nodejs.org/en/) (for frontend dependencies)
-- [Python](https://www.python.org/) (for setup script)
+- [Python](https://www.python.org/) (for template setup script)
 - [VSCode](https://code.visualstudio.com/) (recommended)
 
 ### Recommended VSCode Extensions
@@ -54,12 +55,12 @@ That's it! Your repo is now ready to use.
 
 ### Change the layout
 The style of the application is defined in the `templates/layouts/default_base.gohtml` file.  
-You can change this as needed, but mind the imports to maintain all functionality.  
+You can change this as needed, but mind the imports and templating to maintain all functionality.  
 
 ### Creating a page
 
 #####  Create a new gohtml file in the `templates` directory
-##### Add the following to the top of the file:
+##### Add the following to any page template:
 
 ```html
 {{ template "default_base.gohtml" . }}
@@ -73,19 +74,16 @@ Your page content should go here
 type SomePageHandler struct{}
 
 // Implements PageRouteRegistrar interface
-func (h *HomeHandler) Handler(engine *gin.Engine) {
+func (h *SomePageHandler) Handler(engine *gin.Engine) {
     engine.GET("/some-page", h.get)
 }
 
 func (h *SomePageHandler) get(c *gin.Context) {
-    someData := "Some data"
-    // Set additional page data
+    val := "Some data"
     data := gin.H{
-        // Initial counter values
-        "PageData": someData
+        "PageData": val
     }
 
-    // Render page
     c.HTML(http.StatusOK, "home_page.gohtml", data)
 }
 ```
@@ -114,10 +112,11 @@ API handlers should return JSON data. Included in the package is a structured AP
 }
 ```
 or for errors:
+
 ```json
 {
     "success": false,
-    "error": "Error message
+    "error": "Error message"
 }
 ```
 
@@ -144,9 +143,13 @@ func (h *HomeApiHandler) get(c *gin.Context) {
     // Render page
     c.JSON(http.StatusOK, resp)
 }
-``````
+```
 
-## Template Definitions
-`content`: Each page expects a `content` block to be defined. HTMX components do not need it as they don't use the layout.
-`scripts`: Optional, at the bottom of the page. Can be used to add additional scripts to the page. `<script>` tags are required.
-`head`: Optional, will be loaded in `<head>` of the page.
+## Default Template Definitions
+These ensure that all pages have the required blocks and that the layout is loaded correctly.  
+You can add additional blocks to the layout as needed in `config/template_definitions.go`.  
+The default definitions are:
+
+- `content`: Each page expects a `content` block to be defined. HTMX components do not use this block.
+- `scripts`: Optional, at the bottom of the page. Can be used to add additional scripts to the page. `<script>` tags are required.
+- `head`: Optional, will be loaded in `<head>` of the page.
