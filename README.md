@@ -101,6 +101,51 @@ Add the handler to the `RouteHandlers` slice:
 The instructions are the same as for creating a page, but you want to add the route in the relevant page or system's handler file.  
 Additionally, htmx component templates should not include ```{{ template "default_base.gohtml" . }}```.
 
+### API Handlers
+API handlers are defined in `./handlers/api_handlers`.  
+They are registered in `./config/handlers.go` alongside page handlers.  
+API handlers should return JSON data. Included in the package is a structured API response outputting responses like so:
+```json
+{
+    "success": true,
+    "data": {
+        "someData": "Some data"
+    }
+}
+```
+or for errors:
+```json
+{
+    "success": false,
+    "error": "Error message
+}
+```
+
+You can generate this data using `common.ApiResponseFactory.Ok(data)` and `common.ApiResponseFactory.Error(err)` respectively.
+
+An API handler will generally look like this:
+```go
+type HomeApiHandler struct{}
+
+type HomePageData struct {
+    Time string `json:"time"`
+}
+
+// Implements PageRouteRegistrar interface
+func (h *HomeApiHandler) Handler(engine *gin.Engine) {
+    engine.GET("/api/home/get-server-time", h.get)
+}
+
+func (h *HomeApiHandler) get(c *gin.Context) {
+    timeStr := time.Now().Format("2006-01-02 15:04:05")
+    resp := common.ApiResponseFactory.Ok(
+        &HomePageData{Time: timeStr})
+
+    // Render page
+    c.JSON(http.StatusOK, resp)
+}
+``````
+
 ## Template Definitions
 `content`: Each page expects a `content` block to be defined. HTMX components do not need it as they don't use the layout.
 `scripts`: Optional, at the bottom of the page. Can be used to add additional scripts to the page. `<script>` tags are required.
