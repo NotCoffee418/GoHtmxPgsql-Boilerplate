@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type HomeHandler struct{}
+type HomePageHandler struct{}
 
 type CounterData struct {
 	Value int
@@ -17,12 +17,12 @@ type CounterData struct {
 var CounterColors = [10]string{"#fff", "#800", "#f00", "#080", "#0f0", "#008", "#00f", "#ff0", "#0ff", "#f0f"}
 
 // Implements PageRouteRegistrar interface
-func (h *HomeHandler) Handler(engine *gin.Engine) {
+func (h *HomePageHandler) Handler(engine *gin.Engine) {
 	engine.GET("/", h.get)
 	engine.POST("/component/home/counter", h.updateCounter)
 }
 
-func (h *HomeHandler) get(c *gin.Context) {
+func (h *HomePageHandler) get(c *gin.Context) {
 	// Set additional page data
 	data := gin.H{
 		// Initial counter values
@@ -36,7 +36,7 @@ func (h *HomeHandler) get(c *gin.Context) {
 	c.HTML(http.StatusOK, "home_page.gohtml", data)
 }
 
-func (h *HomeHandler) updateCounter(c *gin.Context) {
+func (h *HomePageHandler) updateCounter(c *gin.Context) {
 	currentCountStr := c.PostForm("currentCount")
 	currentCount, err := strconv.Atoi(currentCountStr)
 	if err != nil {

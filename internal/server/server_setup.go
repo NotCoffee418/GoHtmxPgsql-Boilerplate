@@ -1,23 +1,20 @@
 package server
 
 import (
-	"html/template"
 	"log"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/config"
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
 func SetupServer(engine *gin.Engine) {
-	// Set up templates at common.Tmpl
+	// Set up templates at templating.go
 	initializeTemplates(engine)
 
-	// Background run postcss if enabled
+	// Background run postcss compile if enabled
 	if config.DoMinifyCss {
-		go runPostCSS()
+		go runPostCSS("./static/css/global.css", "./static/css/global.min.css")
 	}
 
 	// Set up static file serving
@@ -33,25 +30,9 @@ func SetupServer(engine *gin.Engine) {
 
 }
 
-func initializeTemplates(engine *gin.Engine) {
-	// Load HTML templates
-	all_templates, err := utils.GetRecursiveFiles(
-		"./templates",
-		func(path string) bool { return filepath.Ext(path) == ".gohtml" })
-	if err != nil {
-		log.Fatal("Error listing templates: ", err)
-	}
-	tmpl, err := template.ParseFiles(all_templates...)
-	if err != nil {
-		log.Fatal("Error parsing templates: ", err)
-	}
-	engine.SetHTMLTemplate(tmpl)
-}
-
-func runPostCSS() {
-	cmd := exec.Command(
-		"npx", "postcss", "./static/css/global.css",
-		"-o", "./static/css/global.min.css")
+func runPostCSS(inputFile string, outputFile string) {
+	log.Println("Running PostCSS...")
+	cmd := exec.Command("npx", "postcss", inputFile, "-o", outputFile)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatal("Error running postcss: ", string(output))

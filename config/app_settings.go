@@ -14,5 +14,6 @@ const TimeoutSeconds = 15
 
 // Should go compile minified global.css using npx postcss?
 // Can be done manually or on compile instead with
+// Note that this is also required for tailwindcss to work.
 // `npx postcss ./static/css/global.css -o ./static/css/global.min.css`
 const DoMinifyCss = true

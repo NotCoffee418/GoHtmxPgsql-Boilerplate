@@ -100,3 +100,8 @@ Add the handler to the `RouteHandlers` slice:
 ### Creating an HTMX component
 The instructions are the same as for creating a page, but you want to add the route in the relevant page or system's handler file.  
 Additionally, htmx component templates should not include ```{{ template "default_base.gohtml" . }}```.
+
+## Template Definitions
+`content`: Each page expects a `content` block to be defined. HTMX components do not need it as they don't use the layout.
+`scripts`: Optional, at the bottom of the page. Can be used to add additional scripts to the page. `<script>` tags are required.
+`head`: Optional, will be loaded in `<head>` of the page.

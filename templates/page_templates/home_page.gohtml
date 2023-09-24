@@ -1,5 +1,39 @@
 {{ template "default_base.gohtml" . }}
 {{ define "content" }}
-<h1>Welcome to my website</h1>
-<div id="counter-display">{{ template "counter.gohtml" . }}</div>
+<div class="flex-grow flex flex-col space-y-8">
+    <h1 class="text-4xl">GoHtmxPgsql-Boilerplate</h1>
+
+    <div class="items-center justify-center">
+        <h2 class="text-3xl mt-8 mb-3">Counter using HTMX</h2>
+        <div id="counter-display">{{ template "counter.gohtml" . }}</div>
+    </div>
+
+    <div class="items-center justify-center">
+        <h2 class="text-3xl mt-8 mb-3">Server time using API</h2>
+        <div class="flex items-center space-x-4">
+            <input type="text" id="serverTimeDisplay" value="Loading..." readonly class="py-2 px-4 text-black">
+            <button onclick="fetchServerTime()" type="button" class="bg-blue-500 hover:bg-blue-600 px-5 py-2 rounded text-white">Click me</button>
+        </div>
+
+    </div>
+    
+
+</div>
+
+{{end}}
+
+{{ define "scripts" }}
+<script>
+    async function fetchServerTime() {
+        try {
+            let response = await fetch('/api/home/get-server-time');
+            let parsedResp = await response.json();
+            document.getElementById('serverTimeDisplay').value = parsedResp.data.time;
+        } catch (error) {
+            console.error('There was a problem with the fetch operation:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchServerTime);
+</script>
 {{ end }}
