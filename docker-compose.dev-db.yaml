@@ -1,0 +1,16 @@
+version: "3"
+
+# This file is intended for development and testing purposes only.
+services:
+  postgres:
+    restart: unless-stopped
+    image: postgres:latest
+
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+      POSTGRES_DB: ${PG_DATABASE}
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"

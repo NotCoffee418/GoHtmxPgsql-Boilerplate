@@ -230,6 +230,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+# Development
+db-data/
+
 
 # -- TEMPLATE ONLY --
 .idea/

@@ -1,20 +1,35 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/config"
 	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/server"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	engine := gin.Default()
+	// Enable optional .env file
+	_, err := os.Stat(".env")
+	if errors.Is(err, os.ErrNotExist) {
+		log.Println("No .env file found, skipping...")
+	} else {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file:", err)
+		} else {
+			log.Println("Loaded .env file")
+		}
+	}
 
 	// Register all routes here, described in handlers
+	engine := gin.Default()
 	server.SetupServer(engine)
 
 	// Start server
