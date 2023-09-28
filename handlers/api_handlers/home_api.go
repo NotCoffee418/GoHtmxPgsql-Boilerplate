@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/common"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/common"
 	"github.com/gin-gonic/gin"
 )
 

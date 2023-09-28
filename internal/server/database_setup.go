@@ -5,9 +5,9 @@ import (
 	"log"
 	"sync"
 
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/config"
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/common"
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/utils"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/common"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )

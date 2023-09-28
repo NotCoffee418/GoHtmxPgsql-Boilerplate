@@ -1,4 +1,4 @@
-module github.com/NotCoffee418/GoHtmxPgsql-Boilerplate
+module github.com/NotCoffee418/GoWebsite-Boilerplate
 
 go 1.21
 

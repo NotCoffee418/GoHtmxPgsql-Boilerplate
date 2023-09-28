@@ -5,8 +5,8 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/config"
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/utils"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 

@@ -4,7 +4,7 @@ import (
 	"log"
 	"os/exec"
 
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/config"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"
 	"github.com/gin-gonic/gin"
 )
 

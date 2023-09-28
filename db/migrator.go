@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/server"
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/utils"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/server"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 	"github.com/jmoiron/sqlx"
 )
 

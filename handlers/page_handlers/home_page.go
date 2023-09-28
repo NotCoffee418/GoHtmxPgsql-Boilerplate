@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/NotCoffee418/GoHtmxPgsql-Boilerplate/internal/page"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/page"
 	"github.com/gin-gonic/gin"
 )
 

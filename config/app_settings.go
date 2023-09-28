@@ -2,7 +2,7 @@ package config
 
 import "time"
 
-const WebsiteTitle = "GoHtmxPgsql-Boilerplate"
+const WebsiteTitle = "GoWebsite-Boilerplate"
 
 // Redirects to HTTPS when schema is HTTP
 // Reverse proxy should handle this, but it's here if needed.

@@ -5,7 +5,7 @@ import re
 # -- CONFIGURATION
 GO_VERSION = "1.21"
 TEMPLATE_REPO_OWNER = "NotCoffee418"
-TEMPLATE_REPO_NAME = "GoHtmxPgsql-Boilerplate"
+TEMPLATE_REPO_NAME = "GoWebsite-Boilerplate"
 ACTUAL_REPO_OWNER = None
 ACTUAL_REPO_NAME = None
 
