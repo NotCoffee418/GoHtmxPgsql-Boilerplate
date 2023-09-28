@@ -44,7 +44,7 @@ func initDb() *sqlx.DB {
 	connStr := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		PG_HOST, PG_PORT, PG_USER, PG_PASS, PG_DATABASE, PG_SSL_MODE)
-	db, err := sqlx.Connect("pgx", connStr)
+	db, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Error connecting to DB: %v", err)
 	}
