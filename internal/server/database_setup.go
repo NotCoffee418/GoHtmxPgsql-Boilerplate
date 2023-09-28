@@ -17,7 +17,7 @@ var (
 	db   *sqlx.DB
 )
 
-func GetConn() *sqlx.DB {
+func GetDBConn() *sqlx.DB {
 	once.Do(func() {
 		db = initDb()
 	})
