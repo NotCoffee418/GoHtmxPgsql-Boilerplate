@@ -14,7 +14,7 @@ type HomePageData struct {
 	Time string `json:"time"`
 }
 
-// Implements PageRouteRegistrar interface
+// Handler Implements PageRouteRegistrar interface
 func (h *HomeApiHandler) Handler(engine *gin.Engine) {
 	engine.GET("/api/home/get-server-time", h.get)
 }

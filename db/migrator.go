@@ -69,7 +69,7 @@ func MigrateUp() {
 
 	// Filter out new migrations to apply and grab their up/down contents
 	migrationsToApply := []migrationFileInfo{}
-	for i, migration := range allMigrations {
+	for _, migration := range allMigrations {
 		if migration.version > installedMigrationVersion {
 			migrationsToApply = append(migrationsToApply, migration)
 		}
