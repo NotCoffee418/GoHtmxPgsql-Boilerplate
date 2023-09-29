@@ -14,7 +14,6 @@ import (
 
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/server"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
-	"github.com/jmoiron/sqlx"
 )
 
 type migrationFileInfo struct {
@@ -33,45 +32,36 @@ type MigrationsTable struct {
 	InstalledAt time.Time `db:"installed_at"`
 }
 
+type migrationState struct {
+	AvailableVersion int
+	InstalledVersion int
+	Migrations       []migrationFileInfo
+}
+
 // MigrateUp migrates the database up to the latest version
 func MigrateUp() {
-	conn := server.GetDBConn()
-
-	// Prepare channels for getting migration info
-	log.Println("Getting migration info...")
-	allMigrationsChan := make(chan []migrationFileInfo)
-	go listAllMigrations(allMigrationsChan)
-
-	installedMigrationChan := make(chan int)
-	go getInstalledMigrationVersion(conn, installedMigrationChan)
-
-	// Extract migration info
-	allMigrations := <-allMigrationsChan
-	totalMigrationCount := len(allMigrations)
-	if totalMigrationCount == 0 {
-		log.Println("No migrations found.")
-		return
-	}
-	highestAvailableMigration := allMigrations[totalMigrationCount-1]
-	installedMigrationVersion := <-installedMigrationChan
+	// Get migration state
+	getLiveMigrationStateChan := make(chan migrationState)
+	go getLiveMigrationInfo(getLiveMigrationStateChan)
+	migrationState := <-getLiveMigrationStateChan
 
 	// Check if already up to date
-	if installedMigrationVersion == highestAvailableMigration.version {
-		log.Printf("Already up to date at version %d.\n", installedMigrationVersion)
+	if migrationState.InstalledVersion == migrationState.AvailableVersion {
+		log.Printf("Already up to date at version %d.\n", migrationState.InstalledVersion)
 		return
-	} else if installedMigrationVersion > highestAvailableMigration.version {
+	} else if migrationState.InstalledVersion > migrationState.AvailableVersion {
 		log.Fatalf(
 			"Installed migration version (%d) is higher than highest available migration (%d).",
-			installedMigrationVersion, highestAvailableMigration.version)
+			migrationState.InstalledVersion, migrationState.AvailableVersion)
 	} else {
 		log.Printf("Migrating from %d to %d...\n",
-			installedMigrationVersion, highestAvailableMigration.version)
+			migrationState.InstalledVersion, migrationState.AvailableVersion)
 	}
 
 	// Filter out new migrations to apply and grab their up/down contents
 	var migrationsToApply []migrationFileInfo
-	for _, migration := range allMigrations {
-		if migration.version > installedMigrationVersion {
+	for _, migration := range migrationState.Migrations {
+		if migration.version > migrationState.InstalledVersion {
 			migrationsToApply = append(migrationsToApply, migration)
 		}
 	}
@@ -87,25 +77,126 @@ func MigrateUp() {
 	}
 
 	// Apply up migrations
+	conn := server.GetDBConn()
 	for _, migration := range migrationsToApply {
-		log.Printf("Applying migration %d...\n", migration.version)
-		_, err := conn.Exec(migration.contents.up)
+		// Init tx for this migration
+		tx, err := conn.Beginx()
 		if err != nil {
-			log.Fatalf("Error applying migration %d: %v", migration.version, err)
+			log.Fatalf("Error beginning transaction: %v", err)
 		}
-		_, err = conn.Exec(
+
+		// Run migration code
+		log.Printf("Applying migration %d...\n", migration.version)
+		_, err = tx.Exec(migration.contents.up)
+		if err != nil {
+			_ = tx.Rollback()
+			log.Fatalf("Error applying migration (Exec) %d: %v", migration.version, err)
+		}
+
+		// Insert migration into migrations table
+		_, err = tx.Exec(
 			"INSERT INTO migrations (version, installed_at) VALUES ($1, $2)",
 			migration.version, time.Now())
 		if err != nil {
-			log.Fatalf("Error inserting migration version %d: %v", migration.version, err)
+			_ = tx.Rollback()
+			log.Fatalf("Error inserting migration version into migrations table %d: %v", migration.version, err)
+		}
+
+		// Commit tx
+		err = tx.Commit()
+		if err != nil {
+			log.Fatalf("Error committing migration %d: %v", migration.version, err)
 		}
 	}
-
+	log.Println("Migration complete.")
 }
 
 // MigrateDown migrates the database down to the previous version
 func MigrateDown() {
-	//conn := server.GetDBConn()
+	// Get migration state
+	getLiveMigrationStateChan := make(chan migrationState)
+	go getLiveMigrationInfo(getLiveMigrationStateChan)
+	liveState := <-getLiveMigrationStateChan
+
+	// Find index of previous migration
+	prevMigrationIdx := -2
+	for i, migration := range liveState.Migrations {
+		if migration.version >= liveState.InstalledVersion {
+			prevMigrationIdx = i - 1
+			break
+		}
+	}
+	migration := &liveState.Migrations[prevMigrationIdx]
+
+	// Validation
+	if prevMigrationIdx == -2 {
+		log.Fatalf("Failed to find currently installed migration  %d", liveState.InstalledVersion)
+	} else if prevMigrationIdx == -1 {
+		log.Fatalf("No migrations to revert.")
+	} else {
+		log.Printf("Migrating from %d to %d...\n",
+			liveState.InstalledVersion, liveState.Migrations[prevMigrationIdx].version)
+	}
+
+	// Get migration contents
+	filledChannel := make(chan bool)
+	fillMigrationContents(migration, filledChannel)
+	<-filledChannel
+
+	// Init tx for this migration
+	conn := server.GetDBConn()
+	tx, err := conn.Beginx()
+	if err != nil {
+		log.Fatalf("Error beginning transaction: %v", err)
+	}
+
+	// Run migration code
+	log.Printf("Applying migration %d...\n", migration.version)
+	_, err = tx.Exec(migration.contents.down)
+	if err != nil {
+		_ = tx.Rollback()
+		log.Fatalf("Error applying migration (Exec) %d: %v", migration.version, err)
+	}
+
+	// Insert migration into migrations table
+	_, err = tx.Exec(
+		"DELETE FROM migrations WHERE version = $1", migration.version)
+	if err != nil {
+		_ = tx.Rollback()
+		log.Fatalf("Error removing version from migrations table %d: %v", migration.version, err)
+	}
+
+	// Commit tx
+	err = tx.Commit()
+	if err != nil {
+		log.Fatalf("Error committing migration %d: %v", migration.version, err)
+	}
+}
+
+// GetLiveMigrationInfo returns the latest migration version and the installed migration version
+func getLiveMigrationInfo(ch chan migrationState) {
+	// Prepare channels for getting migration info
+	log.Println("Getting migration info...")
+	allMigrationsChan := make(chan []migrationFileInfo)
+	go listAllMigrations(allMigrationsChan)
+
+	installedMigrationChan := make(chan int)
+	go getInstalledMigrationVersion(installedMigrationChan)
+
+	// Extract migration info
+	allMigrations := <-allMigrationsChan
+	totalMigrationCount := len(allMigrations)
+	if totalMigrationCount == 0 {
+		log.Println("No migrations found.")
+		return
+	}
+	highestAvailableMigration := allMigrations[totalMigrationCount-1]
+	installedMigrationVersion := <-installedMigrationChan
+	ch <- migrationState{
+		AvailableVersion: highestAvailableMigration.version,
+		InstalledVersion: installedMigrationVersion,
+		Migrations:       allMigrations,
+	}
 }
 
 func listAllMigrations(result chan []migrationFileInfo) {
@@ -152,7 +243,8 @@ func listAllMigrations(result chan []migrationFileInfo) {
 	result <- sortedMigrationFiles
 }
 
-func getInstalledMigrationVersion(conn *sqlx.DB, result chan int) {
+func getInstalledMigrationVersion(result chan int) {
+	conn := server.GetDBConn()
 	var version int
 	err := conn.Get(&version, "SELECT version FROM migrations ORDER BY version DESC LIMIT 1")
 	if err != nil {
