@@ -60,11 +60,14 @@ func startServer() {
 		}
 	}
 
-	// Background init datbase connection
+	// Background init database connection
 	var conn *sqlx.DB
 	go func() {
 		conn = server.GetDBConn()
 	}()
+	defer func(conn *sqlx.DB) {
+		_ = conn.Close()
+	}(conn)
 
 	// Set default page title when missing
 	page.DefaultPageTitle = config.WebsiteTitle
@@ -82,12 +85,6 @@ func startServer() {
 	}
 	log.Print("Server started on port ", config.ListenPort)
 	log.Fatal(svr.ListenAndServe())
-
-	//Close DB connection
-	if conn != nil {
-		log.Println("Closing DB connection...")
-		defer conn.Close()
-	}
 }
 
 func showHelp() {

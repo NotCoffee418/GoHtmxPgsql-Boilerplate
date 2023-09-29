@@ -17,7 +17,7 @@ type CounterData struct {
 
 var CounterColors = [10]string{"#fff", "#800", "#f00", "#080", "#0f0", "#008", "#00f", "#ff0", "#0ff", "#f0f"}
 
-// Implements PageRouteRegistrar interface
+// Handler Implements PageRouteRegistrar interface
 func (h *HomePageHandler) Handler(engine *gin.Engine) {
 	engine.GET("/", h.get)
 	engine.POST("/component/home/counter", h.updateCounter)
@@ -25,7 +25,7 @@ func (h *HomePageHandler) Handler(engine *gin.Engine) {
 
 func (h *HomePageHandler) get(c *gin.Context) {
 	// Set SEO meta data
-	meta := &page.PageMetaData{
+	meta := &page.MetaData{
 		Title:       "Demo Home Page",
 		Description: "This is a demo home page showing off the boilerplate.",
 	}

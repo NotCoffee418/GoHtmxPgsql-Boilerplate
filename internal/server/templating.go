@@ -33,7 +33,10 @@ func initializeTemplates(engine *gin.Engine) {
 func setDefaultTemplateDefinitions(tmpl *template.Template, defs []config.DefaultTemplateDefinition) {
 	for _, def := range defs {
 		if tmpl.Lookup(def.Definition) == nil {
-			tmpl.New(def.Definition).Parse(def.Content)
+			_, err := tmpl.New(def.Definition).Parse(def.Content)
+			if err != nil {
+				log.Fatalf("Error parsing default template definition: %v", err)
+			}
 		}
 	}
 }

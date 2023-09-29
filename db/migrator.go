@@ -3,6 +3,7 @@ package db
 import (
 	"bufio"
 	"database/sql"
+	"errors"
 	"log"
 	"os"
 	"regexp"
@@ -68,7 +69,7 @@ func MigrateUp() {
 	}
 
 	// Filter out new migrations to apply and grab their up/down contents
-	migrationsToApply := []migrationFileInfo{}
+	var migrationsToApply []migrationFileInfo
 	for _, migration := range allMigrations {
 		if migration.version > installedMigrationVersion {
 			migrationsToApply = append(migrationsToApply, migration)
@@ -105,7 +106,6 @@ func MigrateUp() {
 // MigrateDown migrates the database down to the previous version
 func MigrateDown() {
 	//conn := server.GetDBConn()
-
 }
 
 func listAllMigrations(result chan []migrationFileInfo) {
@@ -129,7 +129,7 @@ func listAllMigrations(result chan []migrationFileInfo) {
 
 		// Duplicate version check
 		if _, exists := migrationMap[version]; exists {
-			log.Fatalf("Duplicate migration version: %s", version)
+			log.Fatalf("Duplicate migration version: %d", version)
 		}
 		migrationMap[version] = file
 	}
@@ -156,7 +156,7 @@ func getInstalledMigrationVersion(conn *sqlx.DB, result chan int) {
 	var version int
 	err := conn.Get(&version, "SELECT version FROM migrations ORDER BY version DESC LIMIT 1")
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			result <- 0
 		}
 		log.Fatalf("Error getting migration version: %v", err)
@@ -173,7 +173,12 @@ func fillMigrationContents(migration *migrationFileInfo, returnChan chan bool) {
 	if err != nil {
 		log.Fatalf("Error opening migration file: %v", err)
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			log.Fatalf("Error closing migration file: %v", err)
+		}
+	}(file)
 
 	foundUp := false
 	foundDown := false

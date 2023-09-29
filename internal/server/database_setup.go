@@ -26,24 +26,24 @@ func GetDBConn() *sqlx.DB {
 
 func initDb() *sqlx.DB {
 	// Get connection details from environment
-	PG_HOST := common.GetEnv("PG_HOST")
-	PG_PORT := common.GetEnv("PG_PORT")
-	PG_USER := common.GetEnv("PG_USER")
-	PG_PASS := common.GetEnv("PG_PASS")
-	PG_DATABASE := common.GetEnv("PG_DATABASE")
-	PG_SSL_MODE := common.GetEnv("PG_SSL_MODE")
+	pgHost := common.GetEnv("PG_HOST")
+	pgPort := common.GetEnv("PG_PORT")
+	pgUser := common.GetEnv("PG_USER")
+	pgPass := common.GetEnv("PG_PASS")
+	pgDbName := common.GetEnv("PG_DATABASE")
+	pgSslMode := common.GetEnv("PG_SSL_MODE")
 
 	// Validate SSL mode
 	validSslModes := []string{
 		"disable", "allow", "prefer", "require", "verify-ca", "verify-full"}
-	if !utils.SliceContains(validSslModes, PG_SSL_MODE) {
-		log.Fatalf("Invalid PG_SSL_MODE: %s", PG_SSL_MODE)
+	if !utils.SliceContains(validSslModes, pgSslMode) {
+		log.Fatalf("Invalid PG_SSL_MODE: %s", pgSslMode)
 	}
 
 	// Set up connection
 	connStr := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		PG_HOST, PG_PORT, PG_USER, PG_PASS, PG_DATABASE, PG_SSL_MODE)
+		pgHost, pgPort, pgUser, pgPass, pgDbName, pgSslMode)
 	db, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Error connecting to DB: %v", err)
