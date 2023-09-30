@@ -1,6 +1,7 @@
 package api_handlers
 
 import (
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"time"
 
@@ -15,7 +16,7 @@ type HomePageData struct {
 }
 
 // Handler Implements PageRouteRegistrar interface
-func (h *HomeApiHandler) Handler(engine *gin.Engine) {
+func (h *HomeApiHandler) Handler(engine *gin.Engine, _ *sqlx.DB) {
 	engine.GET("/api/home/get-server-time", h.get)
 }
 

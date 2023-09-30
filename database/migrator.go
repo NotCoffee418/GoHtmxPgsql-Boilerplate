@@ -1,9 +1,10 @@
-package db
+package database
 
 import (
 	"bufio"
 	"database/sql"
 	"errors"
+	"github.com/jmoiron/sqlx"
 	"log"
 	"os"
 	"regexp"
@@ -12,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/server"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 )
 
@@ -39,10 +39,10 @@ type migrationState struct {
 }
 
 // MigrateUp migrates the database up to the latest version
-func MigrateUp() {
+func MigrateUp(db *sqlx.DB) {
 	// Get migration state
 	getLiveMigrationStateChan := make(chan migrationState)
-	go getLiveMigrationInfo(getLiveMigrationStateChan)
+	go getLiveMigrationInfo(db, getLiveMigrationStateChan)
 	migrationState := <-getLiveMigrationStateChan
 
 	// Check if already up to date
@@ -77,10 +77,9 @@ func MigrateUp() {
 	}
 
 	// Apply up migrations
-	conn := server.GetDBConn()
 	for _, migration := range migrationsToApply {
 		// Init tx for this migration
-		tx, err := conn.Beginx()
+		tx, err := db.Beginx()
 		if err != nil {
 			log.Fatalf("Error beginning transaction: %v", err)
 		}
@@ -112,10 +111,10 @@ func MigrateUp() {
 }
 
 // MigrateDown migrates the database down to the previous version
-func MigrateDown() {
+func MigrateDown(db *sqlx.DB) {
 	// Get migration state
 	getLiveMigrationStateChan := make(chan migrationState)
-	go getLiveMigrationInfo(getLiveMigrationStateChan)
+	go getLiveMigrationInfo(db, getLiveMigrationStateChan)
 	liveState := <-getLiveMigrationStateChan
 
 	// Find index of previous migration
@@ -144,8 +143,7 @@ func MigrateDown() {
 	<-filledChannel
 
 	// Init tx for this migration
-	conn := server.GetDBConn()
-	tx, err := conn.Beginx()
+	tx, err := db.Beginx()
 	if err != nil {
 		log.Fatalf("Error beginning transaction: %v", err)
 	}
@@ -174,14 +172,14 @@ func MigrateDown() {
 }
 
 // GetLiveMigrationInfo returns the latest migration version and the installed migration version
-func getLiveMigrationInfo(ch chan migrationState) {
+func getLiveMigrationInfo(db *sqlx.DB, ch chan migrationState) {
 	// Prepare channels for getting migration info
 	log.Println("Getting migration info...")
 	allMigrationsChan := make(chan []migrationFileInfo)
 	go listAllMigrations(allMigrationsChan)
 
 	installedMigrationChan := make(chan int)
-	go getInstalledMigrationVersion(installedMigrationChan)
+	go getInstalledMigrationVersion(db, installedMigrationChan)
 
 	// Extract migration info
 	allMigrations := <-allMigrationsChan
@@ -243,10 +241,9 @@ func listAllMigrations(result chan []migrationFileInfo) {
 	result <- sortedMigrationFiles
 }
 
-func getInstalledMigrationVersion(result chan int) {
-	conn := server.GetDBConn()
+func getInstalledMigrationVersion(db *sqlx.DB, result chan int) {
 	var version int
-	err := conn.Get(&version, "SELECT version FROM migrations ORDER BY version DESC LIMIT 1")
+	err := db.Get(&version, "SELECT version FROM migrations ORDER BY version DESC LIMIT 1")
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			result <- 0

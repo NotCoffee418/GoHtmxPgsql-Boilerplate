@@ -1,10 +1,11 @@
-package server
+package database
 
 import (
 	"fmt"
 	"log"
 	"sync"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/common"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
@@ -17,11 +18,21 @@ var (
 	db   *sqlx.DB
 )
 
-func GetDBConn() *sqlx.DB {
+// GetDB returns a singleton DB instance
+func GetDB() *sqlx.DB {
 	once.Do(func() {
 		db = initDb()
 	})
 	return db
+}
+
+// GetMockDB returns a mock DB for testing
+func GetMockDB() (*sqlx.DB, sqlmock.Sqlmock) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		log.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	return sqlx.NewDb(mockDB, "sqlmock"), mock
 }
 
 func initDb() *sqlx.DB {

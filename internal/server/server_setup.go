@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/jmoiron/sqlx"
 	"log"
 	"os/exec"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupServer(engine *gin.Engine) {
+func SetupServer(engine *gin.Engine, db *sqlx.DB) {
 	// Set up templates at templating.go
 	initializeTemplates(engine)
 
@@ -25,7 +26,7 @@ func SetupServer(engine *gin.Engine) {
 
 	// Register all routes here
 	for _, handler := range config.RouteHandlers {
-		handler.Handler(engine)
+		handler.Handler(engine, db)
 	}
 
 }

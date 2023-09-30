@@ -1,6 +1,7 @@
 package page_handlers
 
 import (
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -18,7 +19,7 @@ type CounterData struct {
 var CounterColors = [10]string{"#fff", "#800", "#f00", "#080", "#0f0", "#008", "#00f", "#ff0", "#0ff", "#f0f"}
 
 // Handler Implements PageRouteRegistrar interface
-func (h *HomePageHandler) Handler(engine *gin.Engine) {
+func (h *HomePageHandler) Handler(engine *gin.Engine, _ *sqlx.DB) {
 	engine.GET("/", h.get)
 	engine.POST("/component/home/counter", h.updateCounter)
 }

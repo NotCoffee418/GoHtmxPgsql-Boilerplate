@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/db"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/database"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/page"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/server"
 	"github.com/gin-gonic/gin"
@@ -35,9 +35,13 @@ func main() {
 		}
 		switch os.Args[2] {
 		case "up":
-			db.MigrateUp()
+			db := database.GetDB()
+			defer db.Close()
+			database.MigrateUp(db)
 		case "down":
-			db.MigrateDown()
+			db := database.GetDB()
+			defer db.Close()
+			database.MigrateDown(db)
 		default:
 			fmt.Println("Invalid migration command. Use 'migrate up' or 'migrate down'. For help, use the 'help' command.")
 		}
@@ -61,20 +65,20 @@ func startServer() {
 	}
 
 	// Background init database connection
-	var conn *sqlx.DB
+	var db *sqlx.DB
 	go func() {
-		conn = server.GetDBConn()
+		db = database.GetDB()
 	}()
 	defer func(conn *sqlx.DB) {
 		_ = conn.Close()
-	}(conn)
+	}(db)
 
 	// Set default page title when missing
 	page.DefaultPageTitle = config.WebsiteTitle
 
 	// Register all routes here, described in handlers
 	engine := gin.Default()
-	server.SetupServer(engine)
+	server.SetupServer(engine, db)
 
 	// Start server
 	svr := &http.Server{
