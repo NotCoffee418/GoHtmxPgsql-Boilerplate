@@ -1,6 +1,9 @@
 package page_handlers
 
 import (
+	"fmt"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/server"
+	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
@@ -17,11 +20,13 @@ type CounterData struct {
 }
 
 var CounterColors = [10]string{"#fff", "#800", "#f00", "#080", "#0f0", "#008", "#00f", "#ff0", "#0ff", "#f0f"}
+var wsManager = server.NewWebSocketManager()
 
 // Handler Implements PageRouteRegistrar interface
 func (h *HomePageHandler) Handler(engine *gin.Engine, _ *sqlx.DB) {
 	engine.GET("/", h.get)
 	engine.POST("/component/home/counter", h.updateCounter)
+	engine.GET("/home/guestbook/ws", h.guestbookWS)
 }
 
 func (h *HomePageHandler) get(c *gin.Context) {
@@ -42,7 +47,7 @@ func (h *HomePageHandler) get(c *gin.Context) {
 	structuredData := page.StructurePageData(&data, meta)
 
 	// Render page
-	c.HTML(http.StatusOK, "home_page.gohtml", structuredData)
+	c.HTML(http.StatusOK, "home_page.html", structuredData)
 }
 
 func (h *HomePageHandler) updateCounter(c *gin.Context) {
@@ -68,5 +73,26 @@ func (h *HomePageHandler) updateCounter(c *gin.Context) {
 	structuredData := page.StructurePageData(&data, nil)
 
 	// Render page
-	c.HTML(http.StatusOK, "counter.gohtml", structuredData)
+	c.HTML(http.StatusOK, "counter.html", structuredData)
+}
+
+func (h *HomePageHandler) guestbookWS(c *gin.Context) {
+	var upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+	wsConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error creating websocket connection")
+		return
+	}
+	if err != nil {
+		fmt.Println("Error generating UUID:", err)
+		return
+	}
+	wsManager.Register(wsConn)
+}
+
+func (h *HomePageHandler) triggerGuestbookUpdate() {
+
 }

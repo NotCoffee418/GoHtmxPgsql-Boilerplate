@@ -1,0 +1,17 @@
+
+<form id="guestbook-form" hx-post="/guestbook/submit" hx-trigger="submit">
+    <div class="mb-4">
+        <label for="name" class="block text-sm font-medium">Name</label>
+        <input type="text" id="name" name="name" class="mt-1 p-2 w-full rounded">
+    </div>
+
+    <div class="mb-4">
+        <label for="message" class="text-sm font-medium block">Message</label>
+        <textarea id="message" name="message" rows="4" class="mt-1 p-2 w-full rounded"></textarea>
+        <div id="error-message" class="text-red-500 hx-swap-oob" hidden>Message cannot be empty.</div>
+    </div>
+
+    <button type="submit" class="bg-blue-500 text-white p-2 rounded w-full">
+        Submit
+    </button>
+</form>

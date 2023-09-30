@@ -14,7 +14,7 @@ func initializeTemplates(engine *gin.Engine) {
 	// Load HTML templates
 	all_templates, err := utils.GetRecursiveFiles(
 		"./templates",
-		func(path string) bool { return filepath.Ext(path) == ".gohtml" })
+		func(path string) bool { return filepath.Ext(path) == ".html" })
 	if err != nil {
 		log.Fatal("Error listing templates: ", err)
 	}
