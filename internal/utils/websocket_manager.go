@@ -1,9 +1,12 @@
-package server
+package utils
 
 import (
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -20,6 +23,26 @@ func NewWebSocketManager() *WebSocketManager {
 	}
 	go wm.cleanupClosedClients()
 	return wm
+}
+
+// UpgradeClient upgrades a client connection to a websocket connection
+// Returns a channel that will receive the UUID of the client
+func (wm *WebSocketManager) UpgradeClient(c *gin.Context) chan uuid.UUID {
+	upgradeChan := make(chan uuid.UUID, 1)
+	go func() {
+		var upgrader = websocket.Upgrader{
+			ReadBufferSize:  config.WsReadBufferSize,
+			WriteBufferSize: config.WsWriteBufferSize,
+		}
+		wsConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Error creating websocket connection")
+			return
+		}
+		upgradeChan <- wm.Register(wsConn)
+		close(upgradeChan)
+	}()
+	return upgradeChan
 }
 
 func (wm *WebSocketManager) Register(conn *websocket.Conn) uuid.UUID {
@@ -43,7 +66,7 @@ func (wm *WebSocketManager) BroadcastMessage(message []byte) {
 	for client := range wm.clients {
 		if err := client.WriteMessage(websocket.TextMessage, message); err != nil {
 			log.Printf("Websocket error: %s", err)
-			client.Close()
+			_ = client.Close()
 			delete(wm.clients, client)
 		}
 	}
@@ -57,7 +80,7 @@ func (wm *WebSocketManager) SendMessageToUser(userID uuid.UUID, message []byte) 
 		if id == userID {
 			if err := client.WriteMessage(websocket.TextMessage, message); err != nil {
 				log.Printf("Websocket error: %s", err)
-				client.Close()
+				_ = client.Close()
 				delete(wm.clients, client)
 			}
 		}

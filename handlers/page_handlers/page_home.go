@@ -1,9 +1,8 @@
 package page_handlers
 
 import (
-	"fmt"
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/server"
-	"github.com/gorilla/websocket"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/database/db_access"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
@@ -20,13 +19,18 @@ type CounterData struct {
 }
 
 var CounterColors = [10]string{"#fff", "#800", "#f00", "#080", "#0f0", "#008", "#00f", "#ff0", "#0ff", "#f0f"}
-var wsManager = server.NewWebSocketManager()
+var wsManager = utils.NewWebSocketManager()
+var db *sqlx.DB
+var gbRepo = db_access.GuestBookEntryRepository{}
 
 // Handler Implements PageRouteRegistrar interface
-func (h *HomePageHandler) Handler(engine *gin.Engine, _ *sqlx.DB) {
+func (h *HomePageHandler) Handler(engine *gin.Engine, _db *sqlx.DB) {
+	db = _db
 	engine.GET("/", h.get)
 	engine.POST("/component/home/counter", h.updateCounter)
 	engine.GET("/home/guestbook/ws", h.guestbookWS)
+	engine.POST("/home/guestbook/submit", h.guestbookPost)
+	engine.GET("/home/guestbook/recent", h.getRecentGuestbookEntries)
 }
 
 func (h *HomePageHandler) get(c *gin.Context) {
@@ -76,23 +80,44 @@ func (h *HomePageHandler) updateCounter(c *gin.Context) {
 	c.HTML(http.StatusOK, "counter.html", structuredData)
 }
 
-func (h *HomePageHandler) guestbookWS(c *gin.Context) {
-	var upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-	}
-	wsConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Error creating websocket connection")
+func (h *HomePageHandler) guestbookWS(context *gin.Context) {
+	wsManager.UpgradeClient(context)
+}
+
+func (h *HomePageHandler) guestbookPost(context *gin.Context) {
+	// Get form data
+	name := context.PostForm("name")
+	message := context.PostForm("message")
+
+	// Validation logic
+	if len(name) == 0 {
+		context.String(http.StatusBadRequest, "Name cannot be empty")
 		return
 	}
-	if err != nil {
-		fmt.Println("Error generating UUID:", err)
+	if len(name) > 255 {
+		context.String(http.StatusBadRequest, "Name cannot be longer than 50 characters")
 		return
 	}
-	wsManager.Register(wsConn)
+	if len(message) == 0 {
+		context.String(http.StatusBadRequest, "Message cannot be empty")
+		return
+	}
+
+	// Insert into database
+	insertResult := <-gbRepo.Insert(db, name, message)
+	if insertResult.Err != nil {
+		context.String(http.StatusInternalServerError, "Error inserting into database")
+		return
+	}
+
+	// Broadcast update to all clients
+	h.triggerGuestbookUpdate()
 }
 
 func (h *HomePageHandler) triggerGuestbookUpdate() {
+	wsManager.BroadcastMessage([]byte("New guestbook entry"))
+}
+
+func (h *HomePageHandler) getRecentGuestbookEntries(context *gin.Context) {
 
 }

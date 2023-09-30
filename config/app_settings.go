@@ -24,3 +24,7 @@ const DoMinifyCss = true
 const DbMaxOpenConns int = 10
 const DbMaxIdleConns int = 5
 const DbConnMaxLifetime time.Duration = time.Hour
+
+// WebSocket settings
+const WsReadBufferSize = 1024
+const WsWriteBufferSize = 1024

@@ -19,12 +19,11 @@
 
     <div class="items-center justify-center">
         <h2 class="text-3xl mt-8 mb-3">Guestbook using WebSockets and Database</h2>
-        <h3 class="text-2xl mt-8 mb-3">Submit Message</h3>
-        <div class="rounded-lg shadow-md">
+
         {{ template "guestbook_form.html" .}}
-        </div>
+
     </div>
-    
+
 
 </div>
 
@@ -32,7 +31,10 @@
 
 {{ define "scripts" }}
 <script>
-    async function fetchServerTime() {
+    async function onLoaded() {
+        fetchServerTimeAsync()
+    }
+    async function fetchServerTimeAsync() {
         try {
             let response = await fetch('/api/home/get-server-time');
             let parsedResp = await response.json();
@@ -42,6 +44,6 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', fetchServerTime);
+    document.addEventListener('DOMContentLoaded', onLoaded);
 </script>
 {{ end }}

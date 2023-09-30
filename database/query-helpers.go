@@ -111,7 +111,7 @@ func ExecuteNamedScalar[T any](db *sqlx.DB, query string, data interface{}) chan
 	resultChan := make(chan ScalarResult[T], 1)
 
 	go func() {
-		var result interface{}
+		var result T
 		err := db.Get(&result, query, data)
 
 		resultChan <- ScalarResult[T]{

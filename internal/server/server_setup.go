@@ -1,6 +1,8 @@
 package server
 
 import (
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/handlers/api_handlers"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/handlers/page_handlers"
 	"github.com/jmoiron/sqlx"
 
 	log "github.com/sirupsen/logrus"
@@ -26,7 +28,10 @@ func SetupServer(engine *gin.Engine, db *sqlx.DB) {
 	engine.Use(internalServerErrorHandlingMiddleware())
 
 	// Register all routes here
-	for _, handler := range config.RouteHandlers {
+	for _, handler := range page_handlers.RouteHandlers {
+		handler.Handler(engine, db)
+	}
+	for _, handler := range api_handlers.RouteHandlers {
 		handler.Handler(engine, db)
 	}
 
