@@ -14,9 +14,7 @@ func Test_getInstalledMigrationVersion(t *testing.T) {
 	mock.ExpectQuery("SELECT version FROM migrations ORDER BY version DESC LIMIT 1").WillReturnRows(rows)
 
 	// Channel to collect the result
-	resultChan := make(chan int, 1)
-
-	getInstalledMigrationVersion(db, resultChan)
+	resultChan := getInstalledMigrationVersionCh(db)
 	version := <-resultChan
 
 	// Validate

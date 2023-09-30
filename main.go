@@ -38,13 +38,13 @@ func main() {
 			defer func(db *sqlx.DB) {
 				_ = db.Close()
 			}(db)
-			server.MigrateUp(db)
+			<-server.MigrateUpCh(db)
 		case "down":
 			db := server.GetDB()
 			defer func(db *sqlx.DB) {
 				_ = db.Close()
 			}(db)
-			server.MigrateDown(db)
+			<-server.MigrateDownCh(db)
 		default:
 			fmt.Println("Invalid migration command. Use 'migrate up' or 'migrate down'. For help, use the 'help' command.")
 		}
@@ -76,10 +76,7 @@ func startServer() {
 
 	// Database migration check
 	log.Println("Checking database migration status...")
-	getLiveMigrationStateChan := make(chan server.MigrationState)
-	go server.GetLiveMigrationInfo(db, getLiveMigrationStateChan)
-	liveState := <-getLiveMigrationStateChan
-	close(getLiveMigrationStateChan)
+	liveState := <-server.GetLiveMigrationInfoCh(db)
 	if liveState.InstalledVersion < liveState.AvailableVersion {
 		log.Warnf("Database migration required. Currently at %d, available version is %d.",
 			liveState.InstalledVersion, liveState.AvailableVersion)
