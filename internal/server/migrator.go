@@ -1,4 +1,4 @@
-package database
+package server
 
 import (
 	"bufio"
@@ -219,7 +219,7 @@ func GetLiveMigrationInfo(db *sqlx.DB, resultChan chan MigrationState) {
 func listAllMigrations(result chan []migrationFileInfo) {
 	// List all valid migration files
 	re := regexp.MustCompile(`.+[/|\\](\d{4})_\S+\.sql`)
-	migrationFiles, err := utils.GetRecursiveFiles("./migrations", func(p string) bool {
+	migrationFiles, err := utils.GetRecursiveFiles("./database/migrations", func(p string) bool {
 		return re.FindStringSubmatch(p) != nil
 	})
 	if err != nil {
@@ -227,7 +227,8 @@ func listAllMigrations(result chan []migrationFileInfo) {
 	}
 
 	// Create map of version per file path
-	migrationMap := make(map[int]string)
+	sortedVersions := make([]int, 0, len(migrationFiles))
+	migrationMap := make(map[int]migrationFileInfo)
 	for _, file := range migrationFiles {
 		matches := re.FindStringSubmatch(file)
 		version, err := strconv.Atoi(matches[1])
@@ -239,23 +240,18 @@ func listAllMigrations(result chan []migrationFileInfo) {
 		if _, exists := migrationMap[version]; exists {
 			log.Fatalf("Duplicate migration version: %d", version)
 		}
-		migrationMap[version] = file
-	}
-
-	// Get sorted migration versions for iterating map
-	sortedVersions := make([]int, 0, len(migrationFiles))
-	for k := range migrationFiles {
-		sortedVersions = append(sortedVersions, k)
+		migrationMap[version] = migrationFileInfo{
+			version: version,
+			file:    file,
+		}
+		sortedVersions = append(sortedVersions, version)
 	}
 	sort.Ints(sortedVersions)
 
 	// Return slice of sorted migrationFileInfo
 	sortedMigrationFiles := make([]migrationFileInfo, 0, len(migrationFiles))
 	for _, version := range sortedVersions {
-		sortedMigrationFiles = append(sortedMigrationFiles, migrationFileInfo{
-			version: version,
-			file:    migrationMap[version],
-		})
+		sortedMigrationFiles = append(sortedMigrationFiles, migrationMap[version])
 	}
 	result <- sortedMigrationFiles
 }
@@ -334,10 +330,10 @@ func fillMigrationContents(migration *migrationFileInfo, doneChan chan bool) {
 
 	// Validation
 	if !foundUp {
-		log.Fatalf("Missing `// +up` section in migration %d", migration.version)
+		log.Fatalf("Missing `-- +up` section in migration %d", migration.version)
 	}
 	if !foundDown {
-		log.Fatalf("Missing `// +down` section in migration %d", migration.version)
+		log.Fatalf("Missing `-- +down` section in migration %d", migration.version)
 	}
 
 	// Return
