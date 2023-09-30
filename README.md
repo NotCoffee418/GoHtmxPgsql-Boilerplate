@@ -3,8 +3,10 @@
 - Go webserver with Gin
 - HTMX with Go templates
 - API handlers
-- PostgreSQL with sqlx
+- WebSocket system
+- PostgreSQL with sqlx and async helper functions
 - Tailwind CSS
+- Database migration system
 
 ## Template Setup
 
@@ -54,16 +56,16 @@ That's it! Your repo is now ready to use.
 ## Usage
 
 ### Change the layout
-The style of the application is defined in the `templates/layouts/default_base.gohtml` file.  
+The style of the application is defined in the `templates/layouts/default_base.html` file.  
 You can change this as needed, but mind the imports and templating to maintain all functionality.  
 
 ### Creating a page
 
-#####  Create a new gohtml file in the `templates` directory
+#####  Create a new html file in the `templates` directory
 ##### Add the following to any page template:
 
 ```html
-{{ template "default_base.gohtml" . }}
+{{ template "default_base.html" . }}
 {{ define "content" }}
 Your page content should go here
 {{ end }}
@@ -97,7 +99,7 @@ func (h *HomePageHandler) get(c *gin.Context) {
     structuredData := page.StructurePageData(&data, meta)
 
     // Render page
-    c.HTML(http.StatusOK, "home_page.gohtml", structuredData)
+    c.HTML(http.StatusOK, "home_page.html", structuredData)
 }
 ```
 
@@ -111,7 +113,7 @@ Add the handler to the `RouteHandlers` slice:
 
 ### Creating an HTMX component
 The instructions are the same as for creating a page, but you want to add the route in the relevant page or system's handler file.  
-Additionally, htmx component templates should not include ```{{ template "default_base.gohtml" . }}```.
+Additionally, htmx component templates should not include ```{{ template "default_base.html" . }}```.
 
 You can still use `page.StructurePageData(data, nil)` without defining meta for between page and component, if the page loads the component as well.
 
