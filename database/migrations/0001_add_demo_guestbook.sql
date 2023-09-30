@@ -3,7 +3,7 @@ CREATE TABLE demo_guestbook (
     id serial PRIMARY KEY,
     name varchar(255) NOT NULL,
     message text NOT NULL,
-    created_at timestamp NOT NULL
+    created_at timestamp NOT NULL DEFAULT NOW()
 );
 
 -- Add some demo messages

@@ -49,6 +49,8 @@ func MigrateUpCh(db *sqlx.DB) chan common.Done {
 		// Check if already up to date
 		if migrationState.InstalledVersion == migrationState.AvailableVersion {
 			log.Printf("Already up to date at version %d.\n", migrationState.InstalledVersion)
+			doneChan <- true
+			close(doneChan)
 			return
 		} else if migrationState.InstalledVersion > migrationState.AvailableVersion {
 			log.Fatalf(
@@ -122,29 +124,33 @@ func MigrateDownCh(db *sqlx.DB) chan common.Done {
 		// Get migration state
 		liveState := <-GetLiveMigrationInfoCh(db)
 
-		// Find index of previous migration
-		prevMigrationIdx := -2
+		// Check if any migrations have been applied
+		if liveState.InstalledVersion == 0 {
+			log.Fatal("No migrations to revert.")
+		}
+
+		// Find index of current m
+		migrationToRevertIdx := -1
 		for i, migration := range liveState.Migrations {
-			if migration.version >= liveState.InstalledVersion {
-				prevMigrationIdx = i - 1
+			if migration.version == liveState.InstalledVersion {
+				migrationToRevertIdx = i
 				break
 			}
 		}
-		migration := &liveState.Migrations[prevMigrationIdx]
 
 		// Validation
-		if prevMigrationIdx == -2 {
+		if migrationToRevertIdx == -1 {
 			log.Fatalf("Failed to find currently installed migration  %d", liveState.InstalledVersion)
-		} else if prevMigrationIdx == -1 {
-			log.Fatalf("No migrations to revert.")
 		} else {
-			log.Printf("Migrating from %d to %d...\n",
-				liveState.InstalledVersion, liveState.Migrations[prevMigrationIdx].version)
+			log.Printf("Reverting migration %d", liveState.InstalledVersion)
 		}
+
+		// Select migration after validation
+		migration := &liveState.Migrations[migrationToRevertIdx]
 
 		// Get migration contents
 		filledChannel := make(chan bool)
-		fillMigrationContents(migration, filledChannel)
+		go fillMigrationContents(migration, filledChannel)
 		<-filledChannel
 		close(filledChannel)
 
@@ -155,7 +161,6 @@ func MigrateDownCh(db *sqlx.DB) chan common.Done {
 		}
 
 		// Run migration code
-		log.Printf("Applying migration %d...\n", migration.version)
 		_, err = tx.Exec(migration.contents.down)
 		if err != nil {
 			_ = tx.Rollback()
@@ -293,7 +298,7 @@ func getInstalledMigrationVersionCh(db *sqlx.DB) chan int {
 
 // fillMigrationContents fills the up/down contents of a migration
 func fillMigrationContents(migration *migrationFileInfo, doneChan chan common.Done) {
-	upRx := regexp.MustCompile(`(?i)--s*\+up(\s*)?(.+)?`)      // +up
+	upRx := regexp.MustCompile(`(?i)--\s*\+up(\s*)?(.+)?`)     // +up
 	downRx := regexp.MustCompile(`(?i)--\s*\+down(\s*)?(.+)?`) // +down
 
 	// Read file contents

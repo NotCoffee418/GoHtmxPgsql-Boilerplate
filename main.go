@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/joho/godotenv"
 	"net/http"
 	"os"
 	"time"
@@ -12,48 +13,10 @@ import (
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/server"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
-	// Check if no arguments are provided
-	if len(os.Args) == 1 {
-		startServer()
-		return
-	}
-
-	// Parse command arguments
-	switch os.Args[1] {
-	case "help":
-		showHelp()
-	case "migrate":
-		if len(os.Args) < 3 {
-			fmt.Println("Expected 'up' or 'down' argument after 'migrate'. For help, use the 'help' command.")
-			return
-		}
-		switch os.Args[2] {
-		case "up":
-			db := server.GetDB()
-			defer func(db *sqlx.DB) {
-				_ = db.Close()
-			}(db)
-			<-server.MigrateUpCh(db)
-		case "down":
-			db := server.GetDB()
-			defer func(db *sqlx.DB) {
-				_ = db.Close()
-			}(db)
-			<-server.MigrateDownCh(db)
-		default:
-			fmt.Println("Invalid migration command. Use 'migrate up' or 'migrate down'. For help, use the 'help' command.")
-		}
-	default:
-		fmt.Println("Unknown command. For help, use the 'help' command.")
-	}
-}
-
-func startServer() {
 	// Enable optional .env file
 	_, err := os.Stat(".env")
 	if errors.Is(err, os.ErrNotExist) {
@@ -74,6 +37,36 @@ func startServer() {
 		_ = conn.Close()
 	}(db)
 
+	// Check if no arguments are provided
+	if len(os.Args) == 1 {
+		startServer(db)
+		return
+	}
+
+	// Parse command arguments
+	switch os.Args[1] {
+	case "help":
+		showHelp()
+	case "migrate":
+		if len(os.Args) < 3 {
+			fmt.Println("Expected 'up' or 'down' argument after 'migrate'. For help, use the 'help' command.")
+			return
+		}
+		switch os.Args[2] {
+		case "up":
+			<-server.MigrateUpCh(db)
+		case "down":
+			<-server.MigrateDownCh(db)
+		default:
+			fmt.Println("Invalid migration command. Use 'migrate up' or 'migrate down'. For help, use the 'help' command.")
+		}
+	default:
+		fmt.Println("Unknown command. For help, use the 'help' command.")
+	}
+	log.Println("Clean exit.")
+}
+
+func startServer(db *sqlx.DB) {
 	// Database migration check
 	log.Println("Checking database migration status...")
 	liveState := <-server.GetLiveMigrationInfoCh(db)
