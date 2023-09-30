@@ -2,7 +2,8 @@ package server
 
 import (
 	"github.com/jmoiron/sqlx"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 	"os/exec"
 
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"

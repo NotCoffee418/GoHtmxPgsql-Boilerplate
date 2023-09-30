@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/jmoiron/sqlx"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"regexp"
 	"sort"
@@ -32,7 +32,7 @@ type MigrationsTable struct {
 	InstalledAt time.Time `db:"installed_at"`
 }
 
-type migrationState struct {
+type MigrationState struct {
 	AvailableVersion int
 	InstalledVersion int
 	Migrations       []migrationFileInfo
@@ -41,9 +41,10 @@ type migrationState struct {
 // MigrateUp migrates the database up to the latest version
 func MigrateUp(db *sqlx.DB) {
 	// Get migration state
-	getLiveMigrationStateChan := make(chan migrationState)
-	go getLiveMigrationInfo(db, getLiveMigrationStateChan)
+	getLiveMigrationStateChan := make(chan MigrationState)
+	go GetLiveMigrationInfo(db, getLiveMigrationStateChan)
 	migrationState := <-getLiveMigrationStateChan
+	close(getLiveMigrationStateChan)
 
 	// Check if already up to date
 	if migrationState.InstalledVersion == migrationState.AvailableVersion {
@@ -75,6 +76,7 @@ func MigrateUp(db *sqlx.DB) {
 	for range migrationsToApply {
 		<-filledChannel
 	}
+	close(filledChannel)
 
 	// Apply up migrations
 	for _, migration := range migrationsToApply {
@@ -113,9 +115,10 @@ func MigrateUp(db *sqlx.DB) {
 // MigrateDown migrates the database down to the previous version
 func MigrateDown(db *sqlx.DB) {
 	// Get migration state
-	getLiveMigrationStateChan := make(chan migrationState)
-	go getLiveMigrationInfo(db, getLiveMigrationStateChan)
+	getLiveMigrationStateChan := make(chan MigrationState)
+	go GetLiveMigrationInfo(db, getLiveMigrationStateChan)
 	liveState := <-getLiveMigrationStateChan
+	close(getLiveMigrationStateChan)
 
 	// Find index of previous migration
 	prevMigrationIdx := -2
@@ -141,6 +144,7 @@ func MigrateDown(db *sqlx.DB) {
 	filledChannel := make(chan bool)
 	fillMigrationContents(migration, filledChannel)
 	<-filledChannel
+	close(filledChannel)
 
 	// Init tx for this migration
 	tx, err := db.Beginx()
@@ -172,29 +176,44 @@ func MigrateDown(db *sqlx.DB) {
 }
 
 // GetLiveMigrationInfo returns the latest migration version and the installed migration version
-func getLiveMigrationInfo(db *sqlx.DB, ch chan migrationState) {
-	// Prepare channels for getting migration info
+func GetLiveMigrationInfo(db *sqlx.DB, resultChan chan MigrationState) {
 	log.Println("Getting migration info...")
-	allMigrationsChan := make(chan []migrationFileInfo)
-	go listAllMigrations(allMigrationsChan)
 
+	// Get installed migration version
 	installedMigrationChan := make(chan int)
 	go getInstalledMigrationVersion(db, installedMigrationChan)
 
-	// Extract migration info
+	// Prepare channels for getting migration info
+	allMigrationsChan := make(chan []migrationFileInfo)
+	go listAllMigrations(allMigrationsChan)
+
+	// Local migration info
 	allMigrations := <-allMigrationsChan
+	close(allMigrationsChan)
 	totalMigrationCount := len(allMigrations)
+
+	// Installed migration info
+	installedMigration := <-installedMigrationChan
+	close(installedMigrationChan)
+
+	// Return
 	if totalMigrationCount == 0 {
 		log.Println("No migrations found.")
+		resultChan <- MigrationState{
+			AvailableVersion: 0,
+			InstalledVersion: installedMigration,
+			Migrations:       nil,
+		}
 		return
+	} else {
+		highestAvailableMigration := allMigrations[totalMigrationCount-1]
+		resultChan <- MigrationState{
+			AvailableVersion: highestAvailableMigration.version,
+			InstalledVersion: installedMigration,
+			Migrations:       allMigrations,
+		}
 	}
-	highestAvailableMigration := allMigrations[totalMigrationCount-1]
-	installedMigrationVersion := <-installedMigrationChan
-	ch <- migrationState{
-		AvailableVersion: highestAvailableMigration.version,
-		InstalledVersion: installedMigrationVersion,
-		Migrations:       allMigrations,
-	}
+
 }
 
 func listAllMigrations(result chan []migrationFileInfo) {
@@ -241,21 +260,31 @@ func listAllMigrations(result chan []migrationFileInfo) {
 	result <- sortedMigrationFiles
 }
 
-func getInstalledMigrationVersion(db *sqlx.DB, result chan int) {
+func getInstalledMigrationVersion(db *sqlx.DB, resultChan chan int) {
+	// Ensure migrations table exists
+	ensureMigrationsTableChan := make(chan bool)
+	go EnsureMigrationTableExists(db, ensureMigrationsTableChan)
+	<-ensureMigrationsTableChan
+	close(ensureMigrationsTableChan)
+
+	// Get installed migration version
 	var version int
 	err := db.Get(&version, "SELECT version FROM migrations ORDER BY version DESC LIMIT 1")
 	if err != nil {
+		// No migrations applied yet
 		if errors.Is(err, sql.ErrNoRows) {
-			result <- 0
+			resultChan <- 0
+			return
+		} else {
+			log.Fatalf("Error getting migration version: %v", err)
 		}
-		log.Fatalf("Error getting migration version: %v", err)
 	}
-	result <- version
+	resultChan <- version
 }
 
-func fillMigrationContents(migration *migrationFileInfo, returnChan chan bool) {
-	upRx := regexp.MustCompile(`(?i)\/\/\s*\+up(\s*)?(.+)?`)     // +up
-	downRx := regexp.MustCompile(`(?i)\/\/\s*\+down(\s*)?(.+)?`) // +down
+func fillMigrationContents(migration *migrationFileInfo, doneChan chan bool) {
+	upRx := regexp.MustCompile(`(?i)--s*\+up(\s*)?(.+)?`)      // +up
+	downRx := regexp.MustCompile(`(?i)--\s*\+down(\s*)?(.+)?`) // +down
 
 	// Read file contents
 	file, err := os.Open(migration.file)
@@ -316,5 +345,30 @@ func fillMigrationContents(migration *migrationFileInfo, returnChan chan bool) {
 		up:   upContents.String(),
 		down: downContents.String(),
 	}
-	returnChan <- true
+	doneChan <- true
+}
+
+// EnsureMigrationTableExists checks if the migrations table exists and creates it if it doesn't
+func EnsureMigrationTableExists(db *sqlx.DB, doneChan chan bool) {
+	// Exist check
+	var exists bool
+	err := db.Get(&exists, "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'migrations')")
+	if err != nil {
+		log.Fatalf("Error checking if migrations table exists: %v", err)
+	}
+
+	// Create on missing
+	if !exists {
+		_, err := db.Exec(`
+		CREATE TABLE migrations (
+			version INT NOT NULL,
+			installed_at TIMESTAMP NOT NULL
+			)
+		`)
+		if err != nil {
+			log.Fatalf("Error creating migrations table: %v", err)
+		}
+
+	}
+	doneChan <- true
 }

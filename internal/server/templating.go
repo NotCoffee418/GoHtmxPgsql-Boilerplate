@@ -1,8 +1,8 @@
 package server
 
 import (
+	log "github.com/sirupsen/logrus"
 	"html/template"
-	"log"
 	"path/filepath"
 
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"

@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -36,11 +36,15 @@ func main() {
 		switch os.Args[2] {
 		case "up":
 			db := database.GetDB()
-			defer db.Close()
+			defer func(db *sqlx.DB) {
+				_ = db.Close()
+			}(db)
 			database.MigrateUp(db)
 		case "down":
 			db := database.GetDB()
-			defer db.Close()
+			defer func(db *sqlx.DB) {
+				_ = db.Close()
+			}(db)
 			database.MigrateDown(db)
 		default:
 			fmt.Println("Invalid migration command. Use 'migrate up' or 'migrate down'. For help, use the 'help' command.")
@@ -64,14 +68,23 @@ func startServer() {
 		}
 	}
 
-	// Background init database connection
-	var db *sqlx.DB
-	go func() {
-		db = database.GetDB()
-	}()
+	// init database connection
+	log.Println("Connecting to database...")
+	db := database.GetDB()
 	defer func(conn *sqlx.DB) {
 		_ = conn.Close()
 	}(db)
+
+	// Database migration check
+	log.Println("Checking database migration status...")
+	getLiveMigrationStateChan := make(chan database.MigrationState)
+	go database.GetLiveMigrationInfo(db, getLiveMigrationStateChan)
+	liveState := <-getLiveMigrationStateChan
+	close(getLiveMigrationStateChan)
+	if liveState.InstalledVersion < liveState.AvailableVersion {
+		log.Warnf("Database migration required. Currently at %d, available version is %d.",
+			liveState.InstalledVersion, liveState.AvailableVersion)
+	}
 
 	// Set default page title when missing
 	page.DefaultPageTitle = config.WebsiteTitle

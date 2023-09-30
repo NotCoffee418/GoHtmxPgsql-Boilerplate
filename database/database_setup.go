@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"sync"
 
 	"github.com/DATA-DOG/go-sqlmock"
