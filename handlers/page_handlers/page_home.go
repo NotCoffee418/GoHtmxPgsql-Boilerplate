@@ -2,7 +2,8 @@ package page_handlers
 
 import (
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/database/db_access"
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
+	"github.com/NotCoffee418/websocketmanager"
+	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
@@ -19,7 +20,7 @@ type CounterData struct {
 }
 
 var CounterColors = [10]string{"#fff", "#800", "#f00", "#080", "#0f0", "#008", "#00f", "#ff0", "#0ff", "#f0f"}
-var wsManager = utils.NewWebSocketManager()
+var wsManager = websocketmanager.NewDefaultManager()
 var db *sqlx.DB
 var gbRepo = db_access.GuestBookEntryRepository{}
 
@@ -81,7 +82,7 @@ func (h *HomePageHandler) updateCounter(c *gin.Context) {
 }
 
 func (h *HomePageHandler) guestbookWS(context *gin.Context) {
-	wsManager.UpgradeClient(context)
+	wsManager.UpgradeClientCh(context.Writer, context.Request)
 }
 
 func (h *HomePageHandler) guestbookPost(context *gin.Context) {
@@ -115,7 +116,7 @@ func (h *HomePageHandler) guestbookPost(context *gin.Context) {
 }
 
 func (h *HomePageHandler) triggerGuestbookUpdate() {
-	wsManager.BroadcastMessage([]byte("New guestbook entry"))
+	wsManager.BroadcastMessage(websocket.TextMessage, []byte("New guestbook entry"))
 }
 
 func (h *HomePageHandler) getRecentGuestbookEntries(context *gin.Context) {
