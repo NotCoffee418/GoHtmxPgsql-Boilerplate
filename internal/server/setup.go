@@ -1,20 +1,19 @@
 package server
 
 import (
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/handlers/api_handlers"
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/handlers/page_handlers"
+	"embed"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
 	"github.com/jmoiron/sqlx"
 
 	log "github.com/sirupsen/logrus"
 	"os/exec"
 
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"
 	"github.com/gin-gonic/gin"
 )
 
-func SetupServer(engine *gin.Engine, db *sqlx.DB) {
+func SetupServer(engine *gin.Engine, db *sqlx.DB, templateFS embed.FS) {
 	// Set up templates at templating.go
-	initializeTemplates(engine)
+	initializeTemplates(engine, templateFS)
 
 	// Background run postcss compile if enabled
 	if config.DoMinifyCss {
@@ -28,10 +27,7 @@ func SetupServer(engine *gin.Engine, db *sqlx.DB) {
 	engine.Use(internalServerErrorHandlingMiddleware())
 
 	// Register all routes here
-	for _, handler := range page_handlers.RouteHandlers {
-		handler.Handler(engine, db)
-	}
-	for _, handler := range api_handlers.RouteHandlers {
+	for _, handler := range config.RouteHandlers {
 		handler.Handler(engine, db)
 	}
 

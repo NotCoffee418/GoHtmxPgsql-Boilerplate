@@ -3,8 +3,9 @@ package server
 import (
 	"bufio"
 	"database/sql"
+	"embed"
 	"errors"
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/common"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -40,11 +41,11 @@ type MigrationState struct {
 }
 
 // MigrateUpCh migrates the database up to the latest version
-func MigrateUpCh(db *sqlx.DB) chan common.Done {
-	doneChan := make(chan common.Done)
+func MigrateUpCh(db *sqlx.DB, migrationFs embed.FS) chan types.Done {
+	doneChan := make(chan types.Done)
 	go func() {
 		// Get migration state
-		migrationState := <-GetLiveMigrationInfoCh(db)
+		migrationState := <-GetLiveMigrationInfoCh(db, migrationFs)
 
 		// Check if already up to date
 		if migrationState.InstalledVersion == migrationState.AvailableVersion {
@@ -70,7 +71,7 @@ func MigrateUpCh(db *sqlx.DB) chan common.Done {
 		}
 
 		// fill up/down contents concurrently
-		filledChannel := make(chan common.Done)
+		filledChannel := make(chan types.Done)
 		for i := range migrationsToApply {
 			idx := i
 			go fillMigrationContents(&migrationsToApply[idx], filledChannel)
@@ -118,11 +119,11 @@ func MigrateUpCh(db *sqlx.DB) chan common.Done {
 }
 
 // MigrateDownCh migrates the database down to the previous version
-func MigrateDownCh(db *sqlx.DB) chan common.Done {
+func MigrateDownCh(db *sqlx.DB, migrationFs embed.FS) chan types.Done {
 	doneChan := make(chan bool)
 	go func() {
 		// Get migration state
-		liveState := <-GetLiveMigrationInfoCh(db)
+		liveState := <-GetLiveMigrationInfoCh(db, migrationFs)
 
 		// Check if any migrations have been applied
 		if liveState.InstalledVersion == 0 {
@@ -186,14 +187,14 @@ func MigrateDownCh(db *sqlx.DB) chan common.Done {
 }
 
 // GetLiveMigrationInfoCh returns the latest migration version and the installed migration version
-func GetLiveMigrationInfoCh(db *sqlx.DB) chan MigrationState {
+func GetLiveMigrationInfoCh(db *sqlx.DB, migrationFs embed.FS) chan MigrationState {
 	resultChan := make(chan MigrationState, 1)
 	go func() {
-		log.Println("Getting migration info...")
+		log.Debugf("Getting migration info...")
 
 		// Start channels for info io collection
 		installedMigrationChan := getInstalledMigrationVersionCh(db)
-		allMigrationsChan := listAllMigrationsCh()
+		allMigrationsChan := listAllMigrationsCh(migrationFs)
 
 		// Local migration info
 		allMigrations := <-allMigrationsChan
@@ -204,7 +205,7 @@ func GetLiveMigrationInfoCh(db *sqlx.DB) chan MigrationState {
 
 		// Return
 		if totalMigrationCount == 0 {
-			log.Println("No migrations found.")
+			log.Warn("No database migrations found")
 			resultChan <- MigrationState{
 				AvailableVersion: 0,
 				InstalledVersion: installedMigration,
@@ -224,12 +225,12 @@ func GetLiveMigrationInfoCh(db *sqlx.DB) chan MigrationState {
 }
 
 // listAllMigrationsCh returns a slice of all migration files in the migrations directory
-func listAllMigrationsCh() chan []migrationFileInfo {
+func listAllMigrationsCh(migrationFs embed.FS) chan []migrationFileInfo {
 	resultChan := make(chan []migrationFileInfo, 1)
 	go func() {
 		// List all valid migration files
 		re := regexp.MustCompile(`.+[/|\\](\d{4})_\S+\.sql`)
-		migrationFiles, err := utils.GetRecursiveFiles("./database/migrations", func(p string) bool {
+		migrationFiles, err := utils.GetRecursiveFiles(migrationFs, "migrations", func(p string) bool {
 			return re.FindStringSubmatch(p) != nil
 		})
 		if err != nil {
@@ -297,7 +298,7 @@ func getInstalledMigrationVersionCh(db *sqlx.DB) chan int {
 }
 
 // fillMigrationContents fills the up/down contents of a migration
-func fillMigrationContents(migration *migrationFileInfo, doneChan chan common.Done) {
+func fillMigrationContents(migration *migrationFileInfo, doneChan chan types.Done) {
 	upRx := regexp.MustCompile(`(?i)--\s*\+up(\s*)?(.+)?`)     // +up
 	downRx := regexp.MustCompile(`(?i)--\s*\+down(\s*)?(.+)?`) // +down
 
@@ -364,8 +365,8 @@ func fillMigrationContents(migration *migrationFileInfo, doneChan chan common.Do
 }
 
 // EnsureMigrationTableExistsCh checks if the migrations table exists and creates it if it doesn't
-func EnsureMigrationTableExistsCh(db *sqlx.DB) chan common.Done {
-	doneChan := make(chan common.Done, 1)
+func EnsureMigrationTableExistsCh(db *sqlx.DB) chan types.Done {
+	doneChan := make(chan types.Done, 1)
 	go func() {
 		// Exist check
 		var exists bool

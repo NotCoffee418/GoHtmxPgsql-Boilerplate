@@ -5,7 +5,7 @@ type DefaultTemplateDefinition struct {
 	Content    string
 }
 
-// Go templating requires all called templates to be defined
+// DefaultTemplateDefinitions Go templating requires all called templates to be defined
 // This is a list of default template items and it's content that will be used if not defined
 var DefaultTemplateDefinitions = []DefaultTemplateDefinition{
 	{"head", ""},                            // in <head>

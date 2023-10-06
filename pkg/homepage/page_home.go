@@ -1,14 +1,14 @@
-package page_handlers
+package homepage
 
 import (
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/database/db_access"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/pkg/guestbook"
 	"github.com/NotCoffee418/websocketmanager"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/page"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,7 +22,7 @@ type CounterData struct {
 var CounterColors = [10]string{"#fff", "#800", "#f00", "#080", "#0f0", "#008", "#00f", "#ff0", "#0ff", "#f0f"}
 var wsManager = websocketmanager.NewDefaultManager()
 var db *sqlx.DB
-var gbRepo = db_access.GuestBookEntryRepository{}
+var gbRepo = guestbook.Repository{}
 
 // Handler Implements PageRouteRegistrar interface
 func (h *HomePageHandler) Handler(engine *gin.Engine, _db *sqlx.DB) {
@@ -36,7 +36,7 @@ func (h *HomePageHandler) Handler(engine *gin.Engine, _db *sqlx.DB) {
 
 func (h *HomePageHandler) get(c *gin.Context) {
 	// Set SEO meta data
-	meta := &page.MetaData{
+	meta := &types.MetaData{
 		Title:       "Demo Home Page",
 		Description: "This is a demo home page showing off the boilerplate.",
 	}
@@ -49,7 +49,7 @@ func (h *HomePageHandler) get(c *gin.Context) {
 		},
 	}
 
-	structuredData := page.StructurePageData(&data, meta)
+	structuredData := types.StructurePageData(&data, meta)
 
 	// Render page
 	c.HTML(http.StatusOK, "home_page.html", structuredData)
@@ -75,7 +75,7 @@ func (h *HomePageHandler) updateCounter(c *gin.Context) {
 		},
 	}
 
-	structuredData := page.StructurePageData(&data, nil)
+	structuredData := types.StructurePageData(&data, nil)
 
 	// Render page
 	c.HTML(http.StatusOK, "counter.html", structuredData)
@@ -105,8 +105,8 @@ func (h *HomePageHandler) guestbookPost(context *gin.Context) {
 	}
 
 	// Insert into database
-	insertResult := <-gbRepo.Insert(db, name, message)
-	if insertResult.Err != nil {
+	err := gbRepo.Insert(db, name, message)
+	if err != nil {
 		context.String(http.StatusInternalServerError, "Error inserting into database")
 		return
 	}
@@ -119,6 +119,6 @@ func (h *HomePageHandler) triggerGuestbookUpdate() {
 	wsManager.BroadcastMessage(websocket.TextMessage, []byte("New guestbook entry"))
 }
 
-func (h *HomePageHandler) getRecentGuestbookEntries(context *gin.Context) {
-
+func (h *HomePageHandler) getRecentGuestbookEntries(c *gin.Context) {
+	//c.
 }

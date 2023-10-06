@@ -1,4 +1,4 @@
-package page
+package types
 
 var DefaultPageTitle = "" // Set in main.go
 

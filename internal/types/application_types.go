@@ -1,4 +1,4 @@
-package common
+package types
 
 // GoResult is a wrapper for a goroutine result with error handling
 type GoResult[T any] struct {

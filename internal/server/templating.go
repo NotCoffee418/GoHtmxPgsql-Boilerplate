@@ -1,19 +1,21 @@
 package server
 
 import (
+	"embed"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
 	log "github.com/sirupsen/logrus"
 	"html/template"
 	"path/filepath"
 
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
-func initializeTemplates(engine *gin.Engine) {
+func initializeTemplates(engine *gin.Engine, templateFs embed.FS) {
 	// Load HTML templates
 	all_templates, err := utils.GetRecursiveFiles(
-		"./templates",
+		templateFs,
+		"templates",
 		func(path string) bool { return filepath.Ext(path) == ".html" })
 	if err != nil {
 		log.Fatal("Error listing templates: ", err)

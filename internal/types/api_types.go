@@ -1,4 +1,4 @@
-package common
+package types
 
 type ApiResponse struct {
 	Success bool        `json:"success"`

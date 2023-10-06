@@ -1,20 +1,27 @@
 package main
 
 import (
+	"embed"
 	"errors"
 	"fmt"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
 	"github.com/joho/godotenv"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/page"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/server"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
 )
+
+//go:embed migrations/*.sql
+var migrationFS embed.FS
+
+//go:embed templates/*/*.html
+var templatesFS embed.FS
 
 func main() {
 	// Enable optional .env file
@@ -54,9 +61,9 @@ func main() {
 		}
 		switch os.Args[2] {
 		case "up":
-			<-server.MigrateUpCh(db)
+			<-server.MigrateUpCh(db, migrationFS)
 		case "down":
-			<-server.MigrateDownCh(db)
+			<-server.MigrateDownCh(db, migrationFS)
 		default:
 			fmt.Println("Invalid migration command. Use 'migrate up' or 'migrate down'. For help, use the 'help' command.")
 		}
@@ -69,18 +76,18 @@ func main() {
 func startServer(db *sqlx.DB) {
 	// Database migration check
 	log.Println("Checking database migration status...")
-	liveState := <-server.GetLiveMigrationInfoCh(db)
+	liveState := <-server.GetLiveMigrationInfoCh(db, migrationFS)
 	if liveState.InstalledVersion < liveState.AvailableVersion {
 		log.Warnf("Database migration required. Currently at %d, available version is %d.",
 			liveState.InstalledVersion, liveState.AvailableVersion)
 	}
 
 	// Set default page title when missing
-	page.DefaultPageTitle = config.WebsiteTitle
+	types.DefaultPageTitle = config.WebsiteTitle
 
 	// Register all routes here, described in handlers
 	engine := gin.Default()
-	server.SetupServer(engine, db)
+	server.SetupServer(engine, db, templatesFS)
 
 	// Start server
 	svr := &http.Server{

@@ -2,12 +2,11 @@ package server
 
 import (
 	"fmt"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
 	log "github.com/sirupsen/logrus"
 	"sync"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/config"
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/common"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -37,12 +36,12 @@ func GetMockDB() (*sqlx.DB, sqlmock.Sqlmock) {
 
 func initDb() *sqlx.DB {
 	// Get connection details from environment
-	pgHost := common.GetEnv("PG_HOST")
-	pgPort := common.GetEnv("PG_PORT")
-	pgUser := common.GetEnv("PG_USER")
-	pgPass := common.GetEnv("PG_PASS")
-	pgDbName := common.GetEnv("PG_DATABASE")
-	pgSslMode := common.GetEnv("PG_SSL_MODE")
+	pgHost := utils.GetEnv("PG_HOST")
+	pgPort := utils.GetEnv("PG_PORT")
+	pgUser := utils.GetEnv("PG_USER")
+	pgPass := utils.GetEnv("PG_PASS")
+	pgDbName := utils.GetEnv("PG_DATABASE")
+	pgSslMode := utils.GetEnv("PG_SSL_MODE")
 
 	// Validate SSL mode
 	validSslModes := []string{

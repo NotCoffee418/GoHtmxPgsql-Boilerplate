@@ -1,11 +1,11 @@
-package api_handlers
+package homepage
 
 import (
 	"github.com/jmoiron/sqlx"
 	"net/http"
 	"time"
 
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/common"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,7 +22,7 @@ func (h *HomeApiHandler) Handler(engine *gin.Engine, _ *sqlx.DB) {
 
 func (h *HomeApiHandler) get(c *gin.Context) {
 	timeStr := time.Now().Format("2006-01-02 15:04:05")
-	resp := common.ApiResponseFactory.Ok(
+	resp := types.ApiResponseFactory.Ok(
 		&HomePageData{Time: timeStr})
 
 	// Render page
