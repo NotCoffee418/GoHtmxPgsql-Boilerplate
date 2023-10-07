@@ -108,7 +108,7 @@ You can register multiple related handlers in one file. For more details see the
 ##### Register the handler in `./config/handlers.go`:
 Add the handler to the `RouteHandlers` slice:
 ```go
-&page_handlers.SomePageHandler{},
+&yourmodule.SomePageHandler{},
 ```
 
 ### Creating an HTMX component
