@@ -1,0 +1,20 @@
+static:
+- embedded in the application at compiletime
+- accessible from /yourfile directly at root of the website
+  (useful for favicon, robots.txt, .css, .js, and other common files that do not change at runtime).
+- you cannot add static files without recompiling.
+
+dynamic:
+- not embedded at compiletime
+- accessible at /media
+- will reflect in runtime without recompiling
+- you should map this to a real directory when using Docker rather than placing files here
+  if you intend to use this for anything other than the postcss build included in this boilerplate.
+
+
+WARNING: global.css is in dynamic because it is compiled by the server at runtime.
+You can change this to use static if preferred (it would improve load time), but you need to
+set `config.DoMinifyCss` to false and set up your own precompile build process for css.
+
+
+This file is safe to remove if desired.

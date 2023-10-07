@@ -17,11 +17,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//go:embed migrations/*.sql
+//go:embed all:migrations
 var migrationFS embed.FS
 
-//go:embed templates/*/*.html
+//go:embed all:templates
 var templatesFS embed.FS
+
+//go:embed all:assets/static
+var staticFs embed.FS
 
 func main() {
 	// Enable optional .env file
@@ -87,7 +90,7 @@ func startServer(db *sqlx.DB) {
 
 	// Register all routes here, described in handlers
 	engine := gin.Default()
-	server.SetupServer(engine, db, templatesFS)
+	server.SetupServer(engine, db, templatesFS, staticFs)
 
 	// Start server
 	svr := &http.Server{

@@ -1,6 +1,6 @@
 <div hx-ws="connect:/home/guestbook/ws" class="rounded-lg shadow-md">
 
-    <div id="guestbook-posts" hx-get="/home/guestbook/recent" hx-trigger="refresh">
+    <div id="guestbook-posts" hx-get="/home/guestbook/recent" hx-trigger="refresh" hx->
         <form id="guestbook-form" hx-post="/guestbook/submit" hx-trigger="submit">
             <div class="mb-4">
                 <label for="name" class="block text-sm font-medium">Name</label>

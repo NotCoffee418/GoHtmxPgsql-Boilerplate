@@ -17,7 +17,7 @@ const TimeoutSeconds = 15
 // DoMinifyCss indicates if the app should compile minified global.css using npx postcss?
 // Can be done manually or on compile instead with
 // Note that this is also required for tailwindcss to work.
-// `npx postcss ./static/css/global.css -o ./static/css/global.min.css`
+// uses `npx postcss`
 const DoMinifyCss = true
 
 // DbMaxOpenConns Database Connection Pooling settings
