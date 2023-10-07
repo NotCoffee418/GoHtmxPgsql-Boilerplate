@@ -105,7 +105,7 @@ func (h *HomePageHandler) get(c *gin.Context) {
 
 You can register multiple related handlers in one file. For more details see the  [Gin documentation](https://gin-gonic.com/docs/)
 
-##### Register the handler in `./config/handlers.go`:
+##### Register the handler in `./handlers/registration.go`:
 Add the handler to the `RouteHandlers` slice:
 ```go
 &yourmodule.SomePageHandler{},
@@ -118,8 +118,7 @@ Additionally, htmx component templates should not include ```{{ template "defaul
 You can still use `page.StructurePageData(data, nil)` without defining meta for between page and component, if the page loads the component as well.
 
 ### API Handlers
-API handlers are defined in `./handlers/api_handlers`.  
-They are registered in `./config/handlers.go` alongside page handlers.  
+They are registered in `./handlers/registration.go` alongside page handlers.  
 API handlers should return JSON data. Included in the package is a structured API response outputting responses like so:
 ```json
 {

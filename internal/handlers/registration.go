@@ -1,4 +1,4 @@
-package config
+package handlers
 
 import (
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"

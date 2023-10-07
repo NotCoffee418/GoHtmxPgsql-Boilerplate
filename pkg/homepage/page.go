@@ -1,6 +1,7 @@
 package homepage
 
 import (
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/pkg/guestbook"
 	"github.com/NotCoffee418/websocketmanager"
@@ -19,10 +20,19 @@ type CounterData struct {
 	Color string
 }
 
-var CounterColors = [10]string{"#fff", "#800", "#f00", "#080", "#0f0", "#008", "#00f", "#ff0", "#0ff", "#f0f"}
-var wsManager = websocketmanager.NewDefaultManager()
-var db *sqlx.DB
-var gbRepo = guestbook.Repository{}
+var (
+	CounterColors = [10]string{"#fff", "#800", "#f00", "#080", "#0f0", "#008", "#00f", "#ff0", "#0ff", "#f0f"}
+	wsManager     *websocketmanager.Manager
+	db            *sqlx.DB
+	gbRepo        = guestbook.Repository{}
+)
+
+func init() {
+	wsManager = websocketmanager.NewBuilder().
+		WithReadBufferSize(config.WsReadBufferSize).
+		WithWriteBufferSize(config.WsWriteBufferSize).
+		Build()
+}
 
 // Handler Implements PageRouteRegistrar interface
 func (h *HomePageHandler) Handler(engine *gin.Engine, _db *sqlx.DB) {
