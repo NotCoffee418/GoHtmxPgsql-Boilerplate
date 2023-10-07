@@ -8,5 +8,5 @@ import (
 // RouteHandlers Register all routes here, described in handlers
 var RouteHandlers = []types.HandlerRegistrar{
 	&homepage.HomeApiHandler{},
-	&homepage.HomePageHandler{},
+	&homepage.Handler{},
 }

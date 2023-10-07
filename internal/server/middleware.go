@@ -11,8 +11,14 @@ func internalServerErrorHandlingMiddleware() gin.HandlerFunc {
 		// Process all errors
 		for _, e := range c.Errors {
 			if e.Type == gin.ErrorTypePrivate {
-				// handle errors here, like logging or sending a generic error response
-				c.String(500, "Internal Server Error")
+				switch e.Err.Error() {
+				case "Internal Server Error":
+					c.String(500, "Internal Server Error")
+				case "Forbidden":
+					c.String(403, "Forbidden")
+				case "Bad Request":
+					c.String(400, "Bad Request")
+				}
 				return
 			}
 		}

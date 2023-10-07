@@ -73,7 +73,15 @@ Your page content should go here
 
 ##### Create a handler for the page in `./handlers` with this structure:
 ```go
+var db *sqlx.DB
+
+// HomePageHandler Implements types.HandlerRegistrar interface
 type HomePageHandler struct{}
+
+// Initialize is called before the handler is registered
+func (h *HomePageHandler) Initialize(initContext *types.HandlerInitContext) {
+    db = initContext.DB
+}
 
 // Implements PageRouteRegistrar interface
 func (h *HomePageHandler) Handler(engine *gin.Engine) {
@@ -141,13 +149,21 @@ You can generate this data using `common.ApiResponseFactory.Ok(data)` and `commo
 
 An API handler will generally look like this:
 ```go
+var db *sqlx.DB
+
+// HomeApiHandler Implements types.HandlerRegistrar interface
 type HomeApiHandler struct{}
 
+// HomePageData is the response for the time call
 type HomePageData struct {
     Time string `json:"time"`
 }
 
-// Implements PageRouteRegistrar interface
+// Initialize is called before the handler is registered
+func (h *HomeApiHandler) Initialize(initContext *types.HandlerInitContext) {
+    db = initContext.DB
+}
+
 func (h *HomeApiHandler) Handler(engine *gin.Engine) {
     engine.GET("/api/home/get-server-time", h.get)
 }
@@ -161,6 +177,33 @@ func (h *HomeApiHandler) get(c *gin.Context) {
     c.JSON(http.StatusOK, resp)
 }
 ```
+
+## Static and dynamic assets
+These are files that are served directly by the webserver in slightly different ways.
+
+### Static Assets
+* Repo path: `./assets/static/`
+* Web path: `/`
+* Embedded: Yes
+* Ideal for: Small, commonly used files
+
+Static assets are embedded in the executable, this means they can be served faster, but they cannot be changed without recompiling the application.
+It also means it's not suitable for large files.  
+It's ideal for small files like favicons, logos, javascript libraries, etc.  
+They each get their own handler registered directly at `/`.
+
+### Dynamic Assets
+* Repo path: `./assets/dynamic/`
+* Web path: `/dynamic/`
+* Embedded: No
+* Ideal for: Large files, files that change often
+
+Dynamic assets are not embedded in the executable, this means they can be changed without recompiling the application, but they are served slightly slower.  
+It's ideal for large files like images, videos, etc. assuming they are not hosted on a CDN.
+They do not have direct handlers, but instead get served as fallback before the 404 handler is called.
+
+We also use this to serve compiled Tailwind files, since they are generated on application startup.  
+You can change this behavior in by setting up your own pre-compile postcss call and disabling `config.MinifyCss` in `config/config.go`.
 
 ## Default Template Definitions
 These ensure that all pages have the required blocks and that the layout is loaded correctly.  

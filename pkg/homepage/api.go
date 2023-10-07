@@ -1,7 +1,6 @@
 package homepage
 
 import (
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"time"
 
@@ -9,14 +8,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type HomeApiHandler struct{}
-
+// HomePageData is the response for the time call
 type HomePageData struct {
 	Time string `json:"time"`
 }
 
+// HomeApiHandler Implements types.HandlerRegistrar interface
+type HomeApiHandler struct{}
+
+// Initialize is called before the handler is registered
+func (h *HomeApiHandler) Initialize(_ *types.HandlerInitContext) {
+	// Nothing to initialize
+}
+
 // Handler Implements PageRouteRegistrar interface
-func (h *HomeApiHandler) Handler(engine *gin.Engine, _ *sqlx.DB) {
+func (h *HomeApiHandler) Handler(engine *gin.Engine) {
 	engine.GET("/api/home/get-server-time", h.get)
 }
 

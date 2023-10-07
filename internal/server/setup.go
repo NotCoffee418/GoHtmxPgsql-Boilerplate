@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/handlers"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
 	"github.com/gin-contrib/gzip"
 	"github.com/jmoiron/sqlx"
 	"io/fs"
@@ -37,9 +38,16 @@ func SetupServer(engine *gin.Engine, db *sqlx.DB, templateFS embed.FS, staticFs 
 	engine.Use(internalServerErrorHandlingMiddleware())
 	engine.Use(gzip.Gzip(config.GzipCompressionLevel))
 
+	// Prepare init context passed to all handlers.
+	// Should include any global dependencies.
+	handlerInitCtx := &types.HandlerInitContext{
+		DB: db,
+	}
+
 	// Register all routes here
 	for _, handler := range handlers.RouteHandlers {
-		handler.Handler(engine, db)
+		handler.Initialize(handlerInitCtx)
+		handler.Handler(engine)
 	}
 }
 
