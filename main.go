@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 	"github.com/joho/godotenv"
 	"net/http"
 	"os"
@@ -81,8 +82,13 @@ func startServer(db *sqlx.DB) {
 	log.Println("Checking database migration status...")
 	liveState := <-server.GetLiveMigrationInfoCh(db, migrationFS)
 	if liveState.InstalledVersion < liveState.AvailableVersion {
-		log.Warnf("Database migration required. Currently at %d, available version is %d.",
-			liveState.InstalledVersion, liveState.AvailableVersion)
+		if utils.GetEnv("AUTO_APPLY_MIGRATIONS") == "true" {
+			log.Println("Migrating database...")
+			<-server.MigrateUpCh(db, migrationFS)
+			log.Println("Database migration complete.")
+		} else {
+			log.Warn("Database migration required. Set MIGRATE_ON_START to true to automatically migrate.")
+		}
 	}
 
 	// Set default page title when missing
