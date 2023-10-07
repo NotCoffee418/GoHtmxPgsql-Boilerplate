@@ -1,12 +1,11 @@
 package config
 
-import "time"
+import (
+	"compress/gzip"
+	"time"
+)
 
 const WebsiteTitle = "GoWebsite-Boilerplate"
-
-// HttpsRedirect Redirects to HTTPS when schema is HTTP
-// Reverse proxy should handle this, but it's here if needed.
-const HttpsRedirect = false
 
 // ListenPort Internal port to listen on
 const ListenPort = 8080
@@ -28,3 +27,6 @@ const DbConnMaxLifetime time.Duration = time.Hour
 // WsReadBufferSize WebSocket settings
 const WsReadBufferSize = 1024
 const WsWriteBufferSize = 1024
+
+// Set level of gzip compression
+const GzipCompressionLevel = gzip.BestSpeed

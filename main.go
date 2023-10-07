@@ -88,7 +88,7 @@ func startServer(db *sqlx.DB) {
 	// Set default page title when missing
 	types.DefaultPageTitle = config.WebsiteTitle
 
-	// Register all routes here, described in handlers
+	// Set up routes, middleware, etc.
 	engine := gin.Default()
 	server.SetupServer(engine, db, templatesFS, staticFs)
 

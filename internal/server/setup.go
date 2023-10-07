@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
+	"github.com/gin-contrib/gzip"
 	"github.com/jmoiron/sqlx"
 	"io/fs"
 	"net/http"
@@ -33,11 +34,12 @@ func SetupServer(engine *gin.Engine, db *sqlx.DB, templateFS embed.FS, staticFs 
 
 	// Register middleware
 	engine.Use(internalServerErrorHandlingMiddleware())
+	engine.Use(gzip.Gzip(config.GzipCompressionLevel))
+
 	// Register all routes here
 	for _, handler := range config.RouteHandlers {
 		handler.Handler(engine, db)
 	}
-
 }
 
 func runPostCSS(inputFile string, outputFile string) {
