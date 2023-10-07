@@ -1,0 +1,13 @@
+<div>
+    <div class="flex flex-col space-y-4">
+        {{ range .Data.Posts }}
+        <div class="flex flex-col space-y-2">
+            <div class="flex flex-row space-x-2">
+                <div class="font-bold">{{ .Name }}</div>
+                <div class="text-gray-500">{{ .CreatedAt }}</div>
+            </div>
+            <div class="text-gray-800">{{ .Message }}</div>
+        </div>
+        {{ end }}
+    </div>
+</div>
