@@ -11,6 +11,6 @@ services:
       POSTGRES_PASSWORD: ${PG_PASS}
       POSTGRES_DB: ${PG_DATABASE}
     volumes:
-      - ./db-data:/var/lib/postgresql/data
+      - /docker/gowebsite-boilerplate/db-data:/var/lib/postgresql/data
     ports:
       - "${PG_PORT}:5432"
