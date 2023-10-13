@@ -43,7 +43,11 @@ func (h *GuestbookHandler) Handler(engine *gin.Engine) {
 }
 
 func (h *GuestbookHandler) guestbookWsInvoker(context *gin.Context) {
-	client := <-wsManager.UpgradeClientCh(context.Writer, context.Request)
+	client, err := wsManager.UpgradeClient(context.Writer, context.Request)
+	if err != nil {
+		log.Errorf("Failed to upgrade client: %v", err)
+		return
+	}
 	wsManager.RegisterClientObserver(*client.ConnId, h.guestbookWsHandler)
 }
 

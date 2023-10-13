@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/NotCoffee418/websocketmanager v0.1.0
+	github.com/NotCoffee418/websocketmanager v0.2.1
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-gonic/gin v1.9.1
 	github.com/gorilla/websocket v1.5.0
