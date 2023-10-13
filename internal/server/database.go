@@ -2,9 +2,11 @@ package server
 
 import (
 	"fmt"
+	"sync"
+
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/access"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
 	log "github.com/sirupsen/logrus"
-	"sync"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
@@ -64,5 +66,6 @@ func initDb() *sqlx.DB {
 	db.SetMaxIdleConns(config.DbMaxIdleConns)
 	db.SetConnMaxLifetime(config.DbConnMaxLifetime)
 
+	access.DB = db
 	return db
 }

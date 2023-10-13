@@ -1,15 +1,16 @@
 package homepage
 
 import (
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
 	"net/http"
 	"strconv"
+
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Handler Implements types.HandlerRegistrar interface
-type Handler struct{}
+type HomePageHandler struct{}
 
 type CounterData struct {
 	Value int
@@ -21,17 +22,17 @@ var (
 )
 
 // Initialize is called before the handler is registered
-func (h *Handler) Initialize(_ *types.HandlerInitContext) {
+func (h *HomePageHandler) Initialize(_ *types.HandlerInitContext) {
 	// Nothing to initialize
 }
 
 // Handler Implements RouteRegistrar interface
-func (h *Handler) Handler(engine *gin.Engine) {
+func (h *HomePageHandler) Handler(engine *gin.Engine) {
 	engine.GET("/", h.get)
 	engine.POST("/component/home/counter", h.updateCounter)
 }
 
-func (h *Handler) get(c *gin.Context) {
+func (h *HomePageHandler) get(c *gin.Context) {
 	// Set SEO meta data
 	meta := &types.MetaData{
 		Title:       "Demo Home Page",
@@ -52,7 +53,7 @@ func (h *Handler) get(c *gin.Context) {
 	c.HTML(http.StatusOK, "home_page.html", structuredData)
 }
 
-func (h *Handler) updateCounter(c *gin.Context) {
+func (h *HomePageHandler) updateCounter(c *gin.Context) {
 	currentCountStr := c.PostForm("currentCount")
 	currentCount, err := strconv.Atoi(currentCountStr)
 	if err != nil {

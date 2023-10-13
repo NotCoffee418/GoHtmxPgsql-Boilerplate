@@ -4,13 +4,15 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/access"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 	"github.com/joho/godotenv"
-	"net/http"
-	"os"
-	"time"
 
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/server"
 	"github.com/gin-gonic/gin"
@@ -96,6 +98,7 @@ func startServer(db *sqlx.DB) {
 
 	// Set up routes, middleware, etc.
 	engine := gin.Default()
+	access.GinEngine = engine
 	server.SetupServer(engine, db, templatesFS, staticFs)
 
 	// Start server

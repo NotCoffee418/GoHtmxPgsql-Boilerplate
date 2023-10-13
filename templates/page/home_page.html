@@ -1,49 +1,56 @@
-{{ template "default_base.html" . }}
-{{ define "content" }}
+{{ template "default_base.html" . }} {{ define "content" }}
 <div class="flex-grow flex flex-col space-y-8">
-    <h1 class="text-4xl">GoWebsite-Boilerplate</h1>
+  <h1 class="text-4xl">GoWebsite-Boilerplate</h1>
 
-    <div class="items-center justify-center">
-        <h2 class="text-3xl mt-8 mb-3">Counter using HTMX</h2>
-        <div id="counter-display">{{ template "counter.html" . }}</div>
+  <div class="items-center justify-center">
+    <h2 class="text-3xl mt-8 mb-3">Counter using HTMX</h2>
+    <div id="counter-display">{{ template "counter.html" . }}</div>
+  </div>
+
+  <div class="items-center justify-center">
+    <h2 class="text-3xl mt-8 mb-3">Server time using API</h2>
+    <div class="flex items-center space-x-4">
+      <input
+        type="text"
+        id="serverTimeDisplay"
+        value="Loading..."
+        readonly
+        class="py-2 px-4 text-black rounded"
+      />
+      <button
+        onclick="fetchServerTimeAsync()"
+        type="button"
+        class="bg-blue-500 hover:bg-blue-600 px-5 py-2 rounded text-white"
+      >
+        Click me
+      </button>
     </div>
+  </div>
 
-    <div class="items-center justify-center">
-        <h2 class="text-3xl mt-8 mb-3">Server time using API</h2>
-        <div class="flex items-center space-x-4">
-            <input type="text" id="serverTimeDisplay" value="Loading..." readonly class="py-2 px-4 text-black rounded">
-            <button onclick="fetchServerTimeAsync()" type="button" class="bg-blue-500 hover:bg-blue-600 px-5 py-2 rounded text-white">Click me</button>
-        </div>
+  <div class="items-center justify-center">
+    <h2 class="text-3xl mt-8 mb-3">
+      Guestbook using HTMX + WebSockets + PgSQL
+    </h2>
 
-    </div>
-
-    <div class="items-center justify-center">
-        <h2 class="text-3xl mt-8 mb-3">Guestbook using WebSockets and Database</h2>
-
-        {{ template "guestbook_form.html" .}}
-
-    </div>
-
-
+    {{ template "guestbook_full.html" .}}
+  </div>
 </div>
 
-{{end}}
-
-{{ define "scripts" }}
+{{end}} {{ define "scripts" }}
 <script>
-    async function onLoaded() {
-        fetchServerTimeAsync()
+  async function onLoaded() {
+    fetchServerTimeAsync();
+  }
+  async function fetchServerTimeAsync() {
+    try {
+      let response = await fetch("/api/home/get-server-time");
+      let parsedResp = await response.json();
+      document.getElementById("serverTimeDisplay").value = parsedResp.data.time;
+    } catch (error) {
+      console.error("There was a problem with the fetch operation:", error);
     }
-    async function fetchServerTimeAsync() {
-        try {
-            let response = await fetch('/api/home/get-server-time');
-            let parsedResp = await response.json();
-            document.getElementById('serverTimeDisplay').value = parsedResp.data.time;
-        } catch (error) {
-            console.error('There was a problem with the fetch operation:', error);
-        }
-    }
+  }
 
-    document.addEventListener('DOMContentLoaded', onLoaded);
+  document.addEventListener("DOMContentLoaded", onLoaded);
 </script>
 {{ end }}

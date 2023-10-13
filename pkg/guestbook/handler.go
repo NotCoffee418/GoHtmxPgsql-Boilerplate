@@ -1,15 +1,19 @@
 package guestbook
 
 import (
+	"net/http"
+
+	log "github.com/sirupsen/logrus"
+
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/weberrors"
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/pkg/validation"
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/pkg/form"
 	"github.com/NotCoffee418/websocketmanager"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
-	"net/http"
 )
 
 var (
@@ -19,10 +23,10 @@ var (
 )
 
 // Handler Implements types.HandlerRegistrar interface
-type Handler struct{}
+type GuestbookHandler struct{}
 
 // Initialize is called before the handler is registered
-func (h *Handler) Initialize(initContext *types.HandlerInitContext) {
+func (h *GuestbookHandler) Initialize(initContext *types.HandlerInitContext) {
 	db = initContext.DB
 
 	// Instance for the websocket manager is tied to the component
@@ -32,77 +36,88 @@ func (h *Handler) Initialize(initContext *types.HandlerInitContext) {
 		Build()
 }
 
-// GuestbookHandler Handler Implements RouteRegistrar interface
-func (h *Handler) GuestbookHandler(engine *gin.Engine) {
+// Handler Handler Implements RouteRegistrar interface
+func (h *GuestbookHandler) Handler(engine *gin.Engine) {
 	engine.GET("/home/guestbook/ws", h.guestbookWsInvoker)
-	engine.POST("/home/guestbook/submit", h.guestbookPost)
 	engine.GET("/home/guestbook/recent", h.getRecentGuestbookEntries)
 }
 
-func (h *Handler) guestbookWsInvoker(context *gin.Context) {
+func (h *GuestbookHandler) guestbookWsInvoker(context *gin.Context) {
 	client := <-wsManager.UpgradeClientCh(context.Writer, context.Request)
-	wsManager.RegisterClientObserver(*client.ConnId, guestbookWsHandler)
+	wsManager.RegisterClientObserver(*client.ConnId, h.guestbookWsHandler)
 }
 
-func guestbookWsHandler(wsClient *websocketmanager.Client, messageType int, message []byte) {
-	wsManager.BroadcastMessage(websocket.TextMessage, []byte("New guestbook entry"))
-}
+func (h *GuestbookHandler) guestbookWsHandler(wsClient *websocketmanager.Client, messageType int, wsData []byte) {
+	//wsManager.BroadcastMessage(websocket.TextMessage, []byte("<div hx-swap-oob='beforeend:#messages'>New guestbook entry</div><div hx-swap-oob='beforeend:#other'>Nwaaaa</div>"))
 
-func (h *Handler) guestbookPost(c *gin.Context) {
-	// Get form data
-	name := c.PostForm("name")
-	message := c.PostForm("message")
-
+	// Get submission data
 	success := true
-	var respMsgs []string
+	responseBuilder := form.NewFormResponseBuilder("guestbook-form-validation").
+		SetContainerClasses("mb-4")
+
+	// Parse incoming message
+	wsMsg, err := utils.DeserializeHtmxWebsocketMessage(string(wsData))
+	if err != nil {
+		// This message is not for this function
+		return
+	}
+	name, name_ok := wsMsg.Data["name"]
+	message, message_ok := wsMsg.Data["message"]
+	if !name_ok || !message_ok {
+		success = false
+		responseBuilder.AddMessage(false, "400: Bad Request")
+	}
 
 	// Validation logic
-	if len(name) == 0 {
-		respMsgs = append(respMsgs, "Name cannot be empty")
-		success = false
-	}
-	if len(name) > 255 {
-		respMsgs = append(respMsgs, "Name cannot be longer than 50 characters")
-		success = false
-	}
-	if len(message) < 4 {
-		respMsgs = append(respMsgs, "Message cannot be empty")
-		success = false
+	if success {
+		if len(name) == 0 {
+			responseBuilder.AddMessage(false, "Name cannot be empty")
+			success = false
+		}
+		if len(name) > 255 {
+			responseBuilder.AddMessage(false, "Name cannot be longer than 50 characters")
+			success = false
+		}
+		if len(message) < 4 {
+			responseBuilder.AddMessage(false, "Message is too short")
+			success = false
+		}
 	}
 
 	// Insert into database
 	if success {
 		err := gbRepo.Insert(db, name, message)
 		if err != nil {
-			respMsgs = append(respMsgs, "Internal server error")
+			responseBuilder.AddMessage(false, "Internal server error")
 			success = false
 		}
 	}
 
+	// Valdiation message
 	if success {
 		// All is well, add success message
-		respMsgs = append(respMsgs, "Successfully added post")
+		responseBuilder.AddMessage(true, "Message Posted!")
 
 		// Broadcast update to all clients
 		h.triggerGuestbookUpdate()
 	}
 
-	// Render form response
-	var respData []validation.FormResponse
-	for _, msg := range respMsgs {
-		respData = append(respData, validation.FormResponse{
-			IsSuccessful: success,
-			Message:      msg,
-		})
+	// Prepare ws response
+	validationHtml, err := responseBuilder.BuildHtmlString()
+	if err != nil {
+		log.Errorf("Failed to get validation html: %v", err)
 	}
-	validation.RenderFormResponse(c, respData)
+
+	// Send it
+	wsManager.SendMessageToClient(*wsClient.ConnId, websocket.TextMessage, []byte(validationHtml))
+
 }
 
-func (h *Handler) triggerGuestbookUpdate() {
+func (h *GuestbookHandler) triggerGuestbookUpdate() {
 	go wsManager.BroadcastMessage(websocket.TextMessage, []byte("New guestbook entry"))
 }
 
-func (h *Handler) getRecentGuestbookEntries(c *gin.Context) {
+func (h *GuestbookHandler) getRecentGuestbookEntries(c *gin.Context) {
 	recentPosts, err := gbRepo.GetRecent(db, 10)
 	if err != nil {
 		weberrors.InternalServerErrorResponse(c, err)

@@ -1,0 +1,55 @@
+{{ if .Visible }} {{ $root := . }} {{range .Messages}}
+<div
+  class="{{ if $root.ContainerClasses }}
+  {{ $root.ContainerClasses }}
+  {{end}}"
+  id="{{ $root.DivId }}"
+  hx-swap-oob="true"
+>
+  {{ if .IsSuccessful }}
+  <div
+    class="fill-green-500 text-green-500 flex flex-row mr-2 {{ $root.MessageClasses }}"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="w-6 h-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M4.5 12.75l6 6 9-13.5"
+      />
+    </svg>
+    {{.Message}}
+  </div>
+
+  {{ else }}
+  <div
+    class="fill-red-500 text-red-500 flex flex-row mr-2 {{ $root.MessageClasses }}"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="w-6 h-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M6 18L18 6M6 6l12 12"
+      />
+    </svg>
+
+    {{.Message}}
+  </div>
+  {{ end }}
+</div>
+{{ end }} {{else}}
+<div id="{{ .DivId }}" hx-swap-oob="true"></div>
+{{ end }}

@@ -234,6 +234,7 @@ dist
 db-data/
 /tmp
 .DS_Store
+__debug_bin*
 
 
 # -- TEMPLATE ONLY --
