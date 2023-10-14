@@ -1,11 +1,11 @@
-<div id="guestbook-messages" class="flex flex-col space-y-4">
-  {{ range .Data.Posts }}
-  <div class="flex flex-col space-y-2">
+<div class="rounded shadow-md mt-4 p-4 bg-slate-800 space-y-4">
+  {{ range .Posts }}
+  <div class="flex flex-col">
     <div class="flex flex-row space-x-2">
-      <div class="font-bold">{{ .Name }}</div>
       <div class="text-gray-500">{{ .CreatedAt }}</div>
+      <div class="font-bold">{{ .Name }}</div>
     </div>
-    <div class="text-gray-800">{{ .Message }}</div>
+    <div class="text-white">{{ .Message }}</div>
   </div>
   {{ end }}
 </div>

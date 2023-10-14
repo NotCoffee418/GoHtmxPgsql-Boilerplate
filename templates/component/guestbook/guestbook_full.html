@@ -1,3 +1,11 @@
 <div hx-ext="ws" ws-connect="/home/guestbook/ws" class="rounded-lg shadow-md">
-  {{ template "guestbook_form.html" .}} {{ template "guestbook_posts.html" .}}
+  {{ template "guestbook_form.html" .}}
+  <div
+    id="guestbook-messages"
+    class="flex flex-col space-y-4"
+    hx-get="/home/guestbook/recent"
+    hx-trigger="load"
+  >
+    Loading messages...
+  </div>
 </div>

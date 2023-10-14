@@ -40,14 +40,14 @@ func (h *HomePageHandler) get(c *gin.Context) {
 	}
 
 	// Initial counter values
-	data := &map[string]interface{}{
+	data := map[string]interface{}{
 		"Counter": CounterData{
 			Value: 0,
 			Color: "#fff",
 		},
 	}
 
-	structuredData := types.StructurePageData(&data, meta)
+	structuredData := types.NewStructurePageData(data, meta)
 
 	// Render page
 	c.HTML(http.StatusOK, "home_page.html", structuredData)
@@ -73,7 +73,7 @@ func (h *HomePageHandler) updateCounter(c *gin.Context) {
 		},
 	}
 
-	structuredData := types.StructurePageData(&data, nil)
+	structuredData := types.NewStructurePageData(data, nil)
 
 	// Render page
 	c.HTML(http.StatusOK, "counter.html", structuredData)

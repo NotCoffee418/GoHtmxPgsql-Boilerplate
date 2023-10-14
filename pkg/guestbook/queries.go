@@ -9,7 +9,7 @@ type Repository struct{}
 
 func (r *Repository) GetRecent(db *sqlx.DB, amount int) ([]Row, error) {
 	var entries []Row
-	err := db.Select(&entries, "SELECT * FROM demo_guestbook ORDER BY created_at DESC LIMIT ?", amount)
+	err := db.Select(&entries, "SELECT * FROM demo_guestbook ORDER BY created_at DESC LIMIT $1", amount)
 	if err != nil {
 		log.Errorf("Error getting recent guestbook entries: %s", err)
 		return nil, err

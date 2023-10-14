@@ -52,8 +52,6 @@ func (h *GuestbookHandler) guestbookWsInvoker(context *gin.Context) {
 }
 
 func (h *GuestbookHandler) guestbookWsHandler(wsClient *websocketmanager.Client, messageType int, wsData []byte) {
-	//wsManager.BroadcastMessage(websocket.TextMessage, []byte("<div hx-swap-oob='beforeend:#messages'>New guestbook entry</div><div hx-swap-oob='beforeend:#other'>Nwaaaa</div>"))
-
 	// Get submission data
 	success := true
 	responseBuilder := form.NewFormResponseBuilder("guestbook-form-validation").
@@ -118,7 +116,20 @@ func (h *GuestbookHandler) guestbookWsHandler(wsClient *websocketmanager.Client,
 }
 
 func (h *GuestbookHandler) triggerGuestbookUpdate() {
-	go wsManager.BroadcastMessage(websocket.TextMessage, []byte("New guestbook entry"))
+	recentPosts, err := gbRepo.GetRecent(db, 10)
+	if err != nil {
+		return
+	}
+	data := map[string]interface{}{
+		"Posts": NewMessageDisplaySlice(recentPosts),
+	}
+	html, err := utils.RenderedTemplateString("guestbook_posts.html", data)
+	html = utils.OobSwapWrap("guestbook-messages", html)
+	if err != nil {
+		log.Errorf("Failed to render guestbook posts: %v", err)
+		return
+	}
+	wsManager.BroadcastMessage(websocket.TextMessage, []byte(html))
 }
 
 func (h *GuestbookHandler) getRecentGuestbookEntries(c *gin.Context) {
@@ -128,9 +139,9 @@ func (h *GuestbookHandler) getRecentGuestbookEntries(c *gin.Context) {
 		return
 	}
 
-	data := &map[string]interface{}{
-		"Posts": recentPosts,
+	data := map[string]interface{}{
+		"Posts": NewMessageDisplaySlice(recentPosts),
 	}
 
-	c.HTML(http.StatusOK, "guestbook_posts.html", data)
+	c.HTML(http.StatusOK, "guestbook_posts.html", &data)
 }

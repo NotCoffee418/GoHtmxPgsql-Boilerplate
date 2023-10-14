@@ -5,9 +5,9 @@ var DefaultPageTitle = "" // Set in main.go
 // StructuredPageData provides a structured way to pass data to a page
 // Meta: SEO information for the page
 // Data: Any data required by the page
-type StructuredPageData[T any] struct {
+type StructuredPageData struct {
 	Meta *MetaData
-	Data *T
+	Data map[string]interface{}
 }
 
 // MetaData contains SEO information for a page
@@ -20,7 +20,7 @@ type MetaData struct {
 	Image       string
 }
 
-func StructurePageData[T any](data *T, meta *MetaData) StructuredPageData[T] {
+func NewStructurePageData(data map[string]interface{}, meta *MetaData) StructuredPageData {
 	// Ensure required values are set
 	if meta == nil {
 		meta = &MetaData{
@@ -31,7 +31,7 @@ func StructurePageData[T any](data *T, meta *MetaData) StructuredPageData[T] {
 	}
 
 	// Return structured data
-	return StructuredPageData[T]{
+	return StructuredPageData{
 		Meta: meta,
 		Data: data,
 	}
