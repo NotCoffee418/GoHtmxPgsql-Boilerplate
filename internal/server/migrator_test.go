@@ -1,9 +1,10 @@
 package server
 
 import (
+	"testing"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_getInstalledMigrationVersion(t *testing.T) {

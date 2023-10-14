@@ -2,6 +2,7 @@ package weberrors
 
 import (
 	"errors"
+
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )

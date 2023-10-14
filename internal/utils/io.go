@@ -1,9 +1,10 @@
 package utils
 
 import (
-	log "github.com/sirupsen/logrus"
 	"io/fs"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type StringFilterFunction func(string) bool

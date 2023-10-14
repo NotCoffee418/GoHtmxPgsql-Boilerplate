@@ -3,16 +3,18 @@ package server
 import (
 	"embed"
 	"fmt"
+	"io/fs"
+	"net/http"
+
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/config"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/handlers"
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
 	"github.com/gin-contrib/gzip"
 	"github.com/jmoiron/sqlx"
-	"io/fs"
-	"net/http"
+
+	"os/exec"
 
 	log "github.com/sirupsen/logrus"
-	"os/exec"
 
 	"github.com/gin-gonic/gin"
 )

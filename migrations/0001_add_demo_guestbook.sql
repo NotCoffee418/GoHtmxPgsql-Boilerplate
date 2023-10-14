@@ -5,12 +5,9 @@ CREATE TABLE demo_guestbook (
     message text NOT NULL,
     created_at timestamp NOT NULL DEFAULT NOW()
 );
-
 -- Add some demo messages
-INSERT INTO demo_guestbook (name, message, created_at) VALUES
-    ('John Doe', 'Hello world!', NOW()),
+INSERT INTO demo_guestbook (name, message, created_at)
+VALUES ('John Doe', 'Hello world!', NOW()),
     ('Jane Doe', 'Hi there!', NOW());
-
-
 -- +down <- SQL below runs when reverting a migration
 DROP TABLE demo_guestbook;

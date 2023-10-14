@@ -14,6 +14,7 @@ ACTUAL_REPO_NAME = None
 def prompt_dev(question, default_value):
     return input(f"{question} [{default_value}]: ") or default_value
 
+
 def edit_file(file_path, edit_func):
     with open(file_path, 'r') as f:
         content = f.read()

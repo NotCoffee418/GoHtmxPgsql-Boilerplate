@@ -5,15 +5,16 @@ import (
 	"database/sql"
 	"embed"
 	"errors"
-	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
-	"github.com/jmoiron/sqlx"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
+	"github.com/jmoiron/sqlx"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/utils"
 )
