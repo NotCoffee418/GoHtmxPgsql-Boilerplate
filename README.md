@@ -1,12 +1,21 @@
-# Go Webserver Template
+# Go Website Boilerplate Template
+This template is a starting point for my Go web projects including my prefered technologies described below.  
+While it bends to my preferences, it is designed to be adaptable, expandable and easy to set up and modify to your needs.  
+
+As of v0.1.0, it is also my first Go project, so it may not be perfect and major overhauls may happen.  
+Contributions are welcome, but please keep in mind that this is a template, not a framework.
+
+
 ## Features
 - Go webserver with Gin
 - HTMX with Go templates
+- HTMX WebSocket support
 - API handlers
-- WebSocket system
-- PostgreSQL with sqlx and async helper functions
-- Tailwind CSS
+- PostgreSQL with sqlx
+- Tailwind CSS (compiled on startup)
 - Database migration system
+- Dockerfile with multi-stage build
+- Demo of all features
 
 ## Template Setup
 
@@ -25,7 +34,7 @@ To finalize the setup, follow these quick steps:
     ```
 
 3. **Run the setup script:**
-
+This script essentially renames the project to your repository name.
     ```bash
     python repo-template-setup.py
     ```
@@ -56,7 +65,7 @@ That's it! Your repo is now ready to use.
 ## Usage
 
 ### Change the layout
-The style of the application is defined in the `templates/layouts/default_base.html` file.  
+The base templateof  the application is defined in the `templates/layouts/default_base.html` file.  
 You can change this as needed, but mind the imports and templating to maintain all functionality.  
 
 ### Creating a page
@@ -214,3 +223,6 @@ The default definitions are:
 - `scripts`: Optional, at the bottom of the page. Can be used to add additional scripts to the page. `<script>` tags are required.
 - `head`: Optional, will be loaded in `<head>` of the page.
 - `page_title`: Will be used as the page title. Defaults to website name.
+
+
+## Utility Functions
