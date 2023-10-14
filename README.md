@@ -71,7 +71,11 @@ docker compose -f docker-compose.dev-db.yml up
 You can now build the application or run the release version:
 ```bash
 go build
+./GoWebsite-Boilerplate
 ```
+
+View the demo at http://localhost:8080
+
 
 ## Development
 
