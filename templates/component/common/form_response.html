@@ -1,4 +1,4 @@
-{{ if .Visible }} {{ $root := . }} {{range .Messages}}
+{{ if .Visible }} {{ $root := . }}
 <div
   class="{{ if $root.ContainerClasses }}
   {{ $root.ContainerClasses }}
@@ -6,7 +6,7 @@
   id="{{ $root.DivId }}"
   hx-swap-oob="true"
 >
-  {{ if .IsSuccessful }}
+  {{range .Messages}} {{ if .IsSuccessful }}
   <div
     class="fill-green-500 text-green-500 flex flex-row mr-2 {{ $root.MessageClasses }}"
   >
@@ -48,8 +48,8 @@
 
     {{.Message}}
   </div>
-  {{ end }}
+  {{ end }} {{ end }}
 </div>
-{{ end }} {{else}}
+{{else}}
 <div id="{{ .DivId }}" hx-swap-oob="true"></div>
 {{ end }}
