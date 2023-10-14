@@ -3,6 +3,7 @@ package homepage
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/types"
 
@@ -54,6 +55,7 @@ func (h *HomePageHandler) get(c *gin.Context) {
 }
 
 func (h *HomePageHandler) updateCounter(c *gin.Context) {
+	time.Sleep(1 * time.Second) // Artificial delay to demo htmx loading indicator
 	currentCountStr := c.PostForm("currentCount")
 	currentCount, err := strconv.Atoi(currentCountStr)
 	if err != nil {

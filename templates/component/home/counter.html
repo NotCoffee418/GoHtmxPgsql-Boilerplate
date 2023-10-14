@@ -3,15 +3,26 @@
   hx-post="/component/home/counter"
   hx-target="#counter-display"
   class="flex items-center space-x-4"
+  hx-indicator="#loading-counter"
 >
-  <input
-    type="text"
-    name="currentCount"
-    value="{{ .Data.Counter.Value }}"
-    style="background-color: {{ .Data.Counter.Color }};"
-    readonly
-    class="py-2 px-4 rounded text-black"
-  />
+  <div class="relative w-[250px]">
+    <input
+      type="text"
+      name="currentCount"
+      value="{{ .Data.Counter.Value }}"
+      style="background-color: {{ .Data.Counter.Color }};"
+      class="py-2 pr-10 pl-4 rounded text-black w-full"
+      readonly
+    />
+    <div
+      id="loading-counter"
+      class="htmx-indicator absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+    >
+      <div
+        class="border-gray-300 h-4 w-4 animate-spin rounded-full border-2 border-t-blue-600"
+      ></div>
+    </div>
+  </div>
   <button
     type="submit"
     class="bg-blue-500 hover:bg-blue-600 px-5 py-2 rounded text-white"
