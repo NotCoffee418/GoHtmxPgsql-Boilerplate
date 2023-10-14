@@ -19,27 +19,23 @@ Contributions are welcome, but please keep in mind that this is a template, not 
 
 ## Template Setup
 
-To finalize the setup, follow these quick steps:
+After cloning the template, to finalize the setup, follow these quick steps:
 
 1. **Clone your repo:**
+    Replace `[YourUsername]` and `[YourRepoName]` with your GitHub username and repository name.
 
     ```bash
     git clone https://github.com/[YourUsername]/[YourRepoName].git
-    ```
-
-2. **Navigate to the repo:**
-
-    ```bash
     cd [YourRepoName]
     ```
 
-3. **Run the setup script:**
-This script essentially renames the project to your repository name.
+2. **Run the setup script:**
+    This script essentially renames the project to your repository name.
     ```bash
     python repo-template-setup.py
     ```
 
-4. **Commit and push:**
+3. **Commit and push:**
 
     ```bash
     git add -A
@@ -47,7 +43,6 @@ This script essentially renames the project to your repository name.
     git push
     ```
 
-Replace `[YourUsername]` and `[YourRepoName]` with your GitHub username and repository name.
 
 That's it! Your repo is now ready to use.
 
@@ -62,7 +57,23 @@ That's it! Your repo is now ready to use.
 - [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go)
 - [gotemplate-syntax](https://marketplace.visualstudio.com/items?itemName=casualjim.gotemplate)
 
-## Usage
+## Try it out
+To try the demo, you need to set up a database and .env, as the demo relies on it.  
+```bash
+cp .env.example .env
+```
+Then edit the .env file to match your database settings.
+Your `.env` file must be set up, since it will use the same variables for the app as setting up the database in docker.
+```bash
+docker compose -f docker-compose.dev-db.yml up
+```
+
+You can now build the application or run the release version:
+```bash
+go build
+```
+
+## Development
 
 ### Change the layout
 The base templateof  the application is defined in the `templates/layouts/default_base.html` file.  
