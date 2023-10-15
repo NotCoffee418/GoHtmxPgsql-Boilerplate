@@ -15,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/NotCoffee418/GoWebsite-Boilerplate/internal/server"
+	"github.com/NotCoffee418/dbmigrator"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
@@ -49,6 +50,7 @@ func main() {
 	defer func(conn *sqlx.DB) {
 		_ = conn.Close()
 	}(db)
+	dbmigrator.SetDatabaseType(dbmigrator.PostgreSQL)
 
 	// Check if no arguments are provided
 	if len(os.Args) == 1 {
@@ -57,24 +59,11 @@ func main() {
 	}
 
 	// Parse command arguments
-	switch os.Args[1] {
-	case "help":
-		showHelp()
-	case "migrate":
-		if len(os.Args) < 3 {
-			fmt.Println("Expected 'up' or 'down' argument after 'migrate'. For help, use the 'help' command.")
-			return
+	if len(os.Args) > 1 {
+		migrationActionable := dbmigrator.HandleMigratorCommand(db.DB, migrationFS, "migrations", os.Args[1:]...)
+		if !migrationActionable {
+			fmt.Println("Unknown command. For help, use the 'help' command.")
 		}
-		switch os.Args[2] {
-		case "up":
-			<-server.MigrateUpCh(db, migrationFS)
-		case "down":
-			<-server.MigrateDownCh(db, migrationFS)
-		default:
-			fmt.Println("Invalid migration command. Use 'migrate up' or 'migrate down'. For help, use the 'help' command.")
-		}
-	default:
-		fmt.Println("Unknown command. For help, use the 'help' command.")
 	}
 	log.Println("Clean exit.")
 }
@@ -82,11 +71,11 @@ func main() {
 func startServer(db *sqlx.DB) {
 	// Database migration check
 	log.Println("Checking database migration status...")
-	liveState := <-server.GetLiveMigrationInfoCh(db, migrationFS)
+	liveState := <-dbmigrator.GetLiveMigrationInfoCh(db.DB, migrationFS, "migrations")
 	if liveState.InstalledVersion < liveState.AvailableVersion {
 		if utils.GetEnv("AUTO_APPLY_MIGRATIONS") == "true" {
 			log.Println("Migrating database...")
-			<-server.MigrateUpCh(db, migrationFS)
+			<-dbmigrator.MigrateUpCh(db.DB, migrationFS, "migrations")
 			log.Println("Database migration complete.")
 		} else {
 			log.Warn("Database migration required. Set MIGRATE_ON_START to true to automatically migrate.")
@@ -110,11 +99,4 @@ func startServer(db *sqlx.DB) {
 	}
 	log.Print("Server started on port ", config.ListenPort)
 	log.Fatal(svr.ListenAndServe())
-}
-
-func showHelp() {
-	fmt.Println(`Available commands:
-	help           - Show this help message.
-	migrate up     - Apply migrations.
-	migrate down   - Rollback migrations.`)
 }
