@@ -62,6 +62,7 @@ def update_mod_template_references():
     go_files = glob.glob(f"{os.getcwd()}/**/*.go", recursive=True)
     for go_file in go_files:
         edit_file(go_file, lambda content: replace_go_imports(content))
+    edit_file(f"{os.getcwd()}/go.mod", lambda content: replace_go_imports(content))
 
 
 def update_go_version_in_go_mod(content):
